@@ -3,40 +3,49 @@
 // ======================================================
 
 const PRODUCTOS = [
-  { id: 1, nombre: "Papa sabanera", categoria: "Tubérculos", campesino: "Hernando Rojas", unidad: "5 kg", precio: 25000, emoji: "🥔" },
-  { id: 2, nombre: "Plátano hartón", categoria: "Frutas", campesino: "Rosa Díaz", unidad: "3 kg", precio: 18000, emoji: "🍌" },
-  { id: 3, nombre: "Cebolla cabezona", categoria: "Verduras", campesino: "Hernando Rojas", unidad: "2 kg", precio: 12000, emoji: "🧅" },
-  { id: 4, nombre: "Zanahoria orgánica", categoria: "Verduras", campesino: "Hernando Rojas", unidad: "2 kg", precio: 10000, emoji: "🥕" },
-  { id: 5, nombre: "Tomate chonto", categoria: "Verduras", campesino: "Luis Beltrán", unidad: "2 kg", precio: 15000, emoji: "🍅" },
-  { id: 6, nombre: "Arándanos de altura", categoria: "Frutas", campesino: "Hernando Rojas", unidad: "500 g", precio: 20000, emoji: "🫐" },
-  { id: 7, nombre: "Aguacate Hass", categoria: "Frutas", campesino: "Rosa Díaz", unidad: "Malla x 6", precio: 14000, emoji: "🥑" },
-  { id: 8, nombre: "Cilantro y hierbabuena", categoria: "Hierbas", campesino: "Hernando Rojas", unidad: "2 manojos", precio: 6000, emoji: "🌿" }
+  { id: 1, nombre: "Papa sabanera", categoria: "Tubérculos", colorCat: "bg-tuberculos", campesino: "Hernando Rojas", zona: "Sibaté", unidad: "5 kg", precio: 25000, emoji: "🥔", frescoHoy: true, masPedido: true, disponible: true },
+  { id: 2, nombre: "Plátano hartón", categoria: "Tubérculos", colorCat: "bg-tuberculos", campesino: "Rosa Díaz", zona: "Fusagasugá", unidad: "3 kg", precio: 18000, emoji: "🍌", frescoHoy: false, masPedido: true, disponible: true },
+  { id: 3, nombre: "Cebolla cabezona", categoria: "Verduras", colorCat: "bg-verduras", campesino: "Hernando Rojas", zona: "Sibaté", unidad: "2 kg", precio: 12000, emoji: "🧅", frescoHoy: true, masPedido: false, disponible: true },
+  { id: 4, nombre: "Zanahoria orgánica", categoria: "Verduras", colorCat: "bg-verduras", campesino: "Hernando Rojas", zona: "Sibaté", unidad: "2 kg", precio: 10000, emoji: "🥕", frescoHoy: true, masPedido: true, disponible: true },
+  { id: 5, nombre: "Tomate chonto", categoria: "Verduras", colorCat: "bg-verduras", campesino: "Luis Beltrán", zona: "Cáqueza", unidad: "2 kg", precio: 15000, emoji: "🍅", frescoHoy: false, masPedido: true, disponible: true },
+  { id: 6, nombre: "Arándanos de altura", categoria: "Frutas", colorCat: "bg-frutas", campesino: "Hernando Rojas", zona: "Sibaté", unidad: "500 g", precio: 20000, emoji: "🫐", frescoHoy: true, masPedido: false, disponible: true },
+  { id: 7, nombre: "Aguacate Hass", categoria: "Frutas", colorCat: "bg-frutas", campesino: "Rosa Díaz", zona: "Fusagasugá", unidad: "Malla x 6", precio: 14000, emoji: "🥑", frescoHoy: false, masPedido: true, disponible: true },
+  { id: 8, nombre: "Cilantro y hierbabuena", categoria: "Hierbas", colorCat: "bg-hierbas", campesino: "Hernando Rojas", zona: "Sibaté", unidad: "2 manojos", precio: 6000, emoji: "🌿", frescoHoy: true, masPedido: false, disponible: true }
+];
+
+const VENTAS_7_DIAS = [
+  { dia: "Lun", monto: 65000 },
+  { dia: "Mar", monto: 92000 },
+  { dia: "Mié", monto: 78000 },
+  { dia: "Jue", monto: 118000 },
+  { dia: "Vie", monto: 127000 },
+  { dia: "Sáb", monto: 164000 },
+  { dia: "Hoy", monto: 135000 }
 ];
 
 const VIDEOS_APRENDER = [
-  { id: 1, titulo: "Cómo calcular lo que te cuesta producir", duracion: "4 min", resumen: "Aprende a sumar semillas, abono, transporte y tu trabajo diario para nunca vender a pérdida." },
-  { id: 2, titulo: "Cómo fijar tu precio justo", duracion: "5 min", resumen: "Fórmula sencilla para poner un precio que cubra tus costos y te deje ganancia real." },
-  { id: 3, titulo: "Cómo negociar y no dejarte estafar", duracion: "6 min", resumen: "Consejos prácticos para acordar pagos claros y vender directo a las familias." }
+  { id: 1, titulo: "Cómo calcular lo que te cuesta producir", duracion: "4 min", color: "#2F6B3A", emoji: "🧮", resumen: "Suma semillas, abono, empaque y tu jornal diario para saber exactamente desde qué precio ganas." },
+  { id: 2, titulo: "Cómo fijar tu precio justo", duracion: "5 min", color: "#8B5E3C", emoji: "⚖️", resumen: "Usa una regla clara para cubrir costos, ahorrar para la próxima siembra y vender sin intermediarios." },
+  { id: 3, titulo: "Cómo negociar y no dejarte estafar", duracion: "6 min", color: "#D9822B", emoji: "🤝", resumen: "Claves prácticas para pactar cantidades, fechas y pagos directos con total tranquilidad." }
 ];
 
-// Estado global compartido entre Perfil Familia y Perfil Campesino
 const estado = {
   perfil: null,         // "familia" | "campesino"
-  pestana: "mercado",   // familia: mercado, carrito, pedido | campesino: pedidos, saldo, aprender
+  pestana: "mercado",   // familia: mercado, carrito, pedido | campesino: pedidos, productos, saldo, aprender
   busqueda: "",
   categoria: "Todas",
   metodoPago: "Nequi",
 
-  // Carrito precargado para sumar exactamente $120.000 en productos
+  // Carrito inicial: suma exactamente $120.000 en productos (+ $15.000 envío + $4.800 servicio = $139.800)
   carrito: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
 
-  // Pedidos del campesino (el #RJ-1024 se comparte con el perfil Familia)
+  // Pedidos compartidos (#RJ-1024 sincroniza entre Campesino y Familia)
   pedidos: [
     {
       id: "RJ-1024",
       familia: "Familia Morales",
       direccion: "Cra 68 # 24B-15, Apto 402 · Bogotá",
-      productosTexto: "Mercado semanal (8 productos frescos)",
+      listaAlistamiento: ["1 × Papa sabanera (5 kg)", "1 × Plátano hartón (3 kg)", "1 × Cebolla y Zanahoria", "1 × Tomate, Arándanos, Aguacate y Hierbas"],
       valorProductos: 120000,
       envio: 15000,
       estado: "Pedido confirmado", // Pedido confirmado -> Preparando -> Enviado por el campesino -> Entregado
@@ -49,7 +58,7 @@ const estado = {
       id: "RJ-1025",
       familia: "Familia Castro",
       direccion: "Calle 127 # 18-40, Casa 6 · Bogotá",
-      productosTexto: "Papa sabanera (5 kg), Tomate chonto (2 kg), Aguacate Hass",
+      listaAlistamiento: ["1 × Papa sabanera (5 kg)", "1 × Tomate chonto (2 kg)", "1 × Aguacate Hass (Malla x 6)"],
       valorProductos: 54000,
       envio: 15000,
       estado: "Pedido confirmado",
@@ -63,16 +72,23 @@ const estado = {
   campesino: {
     nombre: "Hernando Rojas",
     vereda: "Vereda San Miguel, Sibaté",
+    historia: "Lleva 22 años cultivando papa, hortalizas y frutos de altura junto a su familia en tierra fría.",
+    frase: "“Cuando vendemos directo, la comida llega recién cortada y a nuestra finca sí le queda el fruto del trabajo.”",
     saldo: 245000,
+    ventasSemana: 779000,
     cuenta: "Bancolombia Ahorros •••• 4821",
     historial: [
-      { titulo: "Pedido #RJ-1019 entregado", fecha: "Ayer · Productos + envío", monto: 118000 },
-      { titulo: "Pedido #RJ-1015 entregado", fecha: "17 Nov · Productos + envío", monto: 127000 }
+      { titulo: "Pedido #RJ-1019 entregado", fecha: "Ayer · Productos + envío", monto: 118000, tipo: "in" },
+      { titulo: "Pedido #RJ-1015 entregado", fecha: "17 Nov · Productos + envío", monto: 127000, tipo: "in" },
+      { titulo: "Retiro a Bancolombia", fecha: "14 Nov · Transferencia", monto: -180000, tipo: "out" }
     ]
   }
 };
 
-// Formato de dinero colombiano: $139.800
+// ======================================================
+// UTILIDADES Y ANIMACIÓN DE NÚMEROS
+// ======================================================
+
 function formatoCOP(valor) {
   const signo = valor < 0 ? "-" : "";
   return signo + "$" + Math.abs(Math.round(valor)).toLocaleString("es-CO");
@@ -83,8 +99,39 @@ function mostrarToast(texto = "¡Listo!") {
   el.textContent = texto;
   el.classList.remove("hidden");
   clearTimeout(window._timerToast);
-  window._timerToast = setTimeout(() => el.classList.add("hidden"), 2300);
+  window._timerToast = setTimeout(() => el.classList.add("hidden"), 2200);
 }
+
+// Anima números importantes contando hacia arriba (respeta prefers-reduced-motion)
+function animarConteos() {
+  const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  document.querySelectorAll("[data-count]").forEach((el) => {
+    const destino = Number(el.getAttribute("data-count")) || 0;
+    if (reduceMotion || destino === 0) {
+      el.textContent = formatoCOP(destino);
+      return;
+    }
+    const inicio = performance.now();
+    const duracion = 450;
+    function paso(ahora) {
+      const progreso = Math.min((ahora - inicio) / duracion, 1);
+      const actual = Math.round(destino * (1 - Math.pow(1 - progreso, 3)));
+      el.textContent = formatoCOP(actual);
+      if (progreso < 1) requestAnimationFrame(paso);
+    }
+    requestAnimationFrame(paso);
+  });
+}
+
+// Íconos SVG propios para la barra inferior
+const ICONOS_NAV = {
+  mercado: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l2-4h14l2 4"/><path d="M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9"/><path d="M9 13h6"/></svg>`,
+  carrito: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.5L22 7H6"/></svg>`,
+  pedido: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l9 4.5v11L12 22l-9-4.5v-11L12 2z"/><path d="M12 22V11"/><path d="M21 6.5L12 11 3 6.5"/></svg>`,
+  productos: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22V12"/><path d="M12 12C12 7 17 4 21 5c0 5-3 8-9 7z"/><path d="M12 14C12 9 7 6 3 7c0 5 3 8 9 7z"/></svg>`,
+  saldo: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="3"/><circle cx="12" cy="12" r="3"/></svg>`,
+  aprender: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8l10-4 10 4-10 4-10-4z"/><path d="M6 10v6c0 2 3 3 6 3s6-1 6-3v-6"/></svg>`
+};
 
 // ======================================================
 // NAVEGACIÓN ENTRE PERFILES Y PESTAÑAS
@@ -103,12 +150,13 @@ function entrarPerfil(perfil) {
 
   if (perfil === "familia") {
     iniciales.textContent = "FM";
-    titulo.textContent = "Raíz Justa";
-    sub.textContent = "Perfil Familia · Bogotá";
+    titulo.textContent = "Buenas, familia";
+    sub.textContent = "Bogotá · Mercado directo del campo";
   } else {
+    const fechaHoy = new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "short" });
     iniciales.textContent = "HR";
-    titulo.textContent = estado.campesino.nombre;
-    sub.textContent = estado.campesino.vereda;
+    titulo.textContent = "Hola, Hernando";
+    sub.textContent = `${fechaHoy.charAt(0).toUpperCase() + fechaHoy.slice(1)} · Sibaté`;
   }
 
   dibujarBarraInferior();
@@ -120,8 +168,8 @@ function volverBienvenida() {
   document.getElementById("welcome-screen").classList.remove("hidden");
 }
 
-function cambiarPestana(nuevaPestana) {
-  estado.pestana = nuevaPestana;
+function cambiarPestana(nueva) {
+  estado.pestana = nueva;
   dibujarBarraInferior();
   dibujarVistaActual();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -130,28 +178,32 @@ function cambiarPestana(nuevaPestana) {
 function dibujarBarraInferior() {
   const nav = document.getElementById("bottom-nav");
   if (estado.perfil === "familia") {
-    const totalUnidades = Object.values(estado.carrito).reduce((a, b) => a + b, 0);
+    const uds = Object.values(estado.carrito).reduce((a, b) => a + b, 0);
     nav.innerHTML = `
       <button class="nav-item ${estado.pestana === "mercado" ? "active" : ""}" onclick="cambiarPestana('mercado')">
-        <span class="nav-ico">🥕</span><span>Mercado</span>
+        ${ICONOS_NAV.mercado}<span>Mercado</span>
       </button>
       <button class="nav-item ${estado.pestana === "carrito" ? "active" : ""}" onclick="cambiarPestana('carrito')">
-        <span class="nav-ico">🛒</span><span>Carrito (${totalUnidades})</span>
+        ${ICONOS_NAV.carrito}<span>Carrito</span>
+        ${uds > 0 ? `<span class="nav-badge">${uds}</span>` : ""}
       </button>
       <button class="nav-item ${estado.pestana === "pedido" ? "active" : ""}" onclick="cambiarPestana('pedido')">
-        <span class="nav-ico">📦</span><span>Mi pedido</span>
+        ${ICONOS_NAV.pedido}<span>Mi pedido</span>
       </button>
     `;
   } else {
     nav.innerHTML = `
       <button class="nav-item ${estado.pestana === "pedidos" ? "active" : ""}" onclick="cambiarPestana('pedidos')">
-        <span class="nav-ico">🧺</span><span>Pedidos</span>
+        ${ICONOS_NAV.pedido}<span>Pedidos</span>
+      </button>
+      <button class="nav-item ${estado.pestana === "productos" ? "active" : ""}" onclick="cambiarPestana('productos')">
+        ${ICONOS_NAV.productos}<span>Productos</span>
       </button>
       <button class="nav-item ${estado.pestana === "saldo" ? "active" : ""}" onclick="cambiarPestana('saldo')">
-        <span class="nav-ico">💰</span><span>Mi saldo</span>
+        ${ICONOS_NAV.saldo}<span>Mi saldo</span>
       </button>
       <button class="nav-item ${estado.pestana === "aprender" ? "active" : ""}" onclick="cambiarPestana('aprender')">
-        <span class="nav-ico">🎓</span><span>Aprender</span>
+        ${ICONOS_NAV.aprender}<span>Aprender</span>
       </button>
     `;
   }
@@ -164,60 +216,128 @@ function dibujarVistaActual() {
     if (estado.pestana === "pedido") vistaMiPedido();
   } else {
     if (estado.pestana === "pedidos") vistaPedidosCampesino();
+    if (estado.pestana === "productos") vistaMisProductos();
     if (estado.pestana === "saldo") vistaSaldoCampesino();
     if (estado.pestana === "aprender") vistaAprender();
   }
+  animarConteos();
 }
 
 // ======================================================
 // PERFIL FAMILIA: 1. MERCADO
 // ======================================================
 
+function tarjetaCarrusel(p) {
+  return `
+    <article class="carousel-card card-accent">
+      <div class="cat-circle ${p.colorCat}">${p.emoji}</div>
+      <div style="flex:1; min-width:0;">
+        <div class="product-name">${p.nombre}</div>
+        <div class="product-farmer">${p.campesino} · ${p.zona}</div>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+          <strong style="color:var(--bosque); font-size:16px;">${formatoCOP(p.precio)}</strong>
+          <button class="btn-add-circle" style="width:36px; height:36px; font-size:20px;" onclick="cambiarCantidad(${p.id}, 1)" aria-label="Agregar ${p.nombre}">+</button>
+        </div>
+      </div>
+    </article>
+  `;
+}
+
 function vistaMercado() {
-  const categorias = ["Todas", "Verduras", "Frutas", "Tubérculos", "Hierbas"];
-  const chipsHtml = categorias.map((cat) => `
-    <button class="chip ${estado.categoria === cat ? "active" : ""}" onclick="filtrarCategoria('${cat}')">${cat}</button>
+  const disponibles = PRODUCTOS.filter((p) => p.disponible);
+  const frescos = disponibles.filter((p) => p.frescoHoy).map(tarjetaCarrusel).join("");
+  const masPedidos = disponibles.filter((p) => p.masPedido).map(tarjetaCarrusel).join("");
+
+  const categorias = [
+    { nombre: "Todas", bg: "#FFFFFF" },
+    { nombre: "Verduras", bg: "var(--cat-verduras)" },
+    { nombre: "Frutas", bg: "var(--cat-frutas)" },
+    { nombre: "Tubérculos", bg: "var(--cat-tuberculos)" },
+    { nombre: "Hierbas", bg: "var(--cat-hierbas)" }
+  ];
+
+  const chipsHtml = categorias.map((c) => `
+    <button class="chip ${estado.categoria === c.nombre ? "active" : ""}"
+      style="background:${c.bg};" onclick="filtrarCategoria('${c.nombre}')">${c.nombre}</button>
   `).join("");
 
-  const filtrados = PRODUCTOS.filter((p) => {
-    const coincideCat = estado.categoria === "Todas" || p.categoria === estado.categoria;
-    const coincideTexto = p.nombre.toLowerCase().includes(estado.busqueda.toLowerCase()) ||
-                          p.campesino.toLowerCase().includes(estado.busqueda.toLowerCase());
-    return coincideCat && coincideTexto;
+  const filtrados = disponibles.filter((p) => {
+    const okCat = estado.categoria === "Todas" || p.categoria === estado.categoria;
+    const q = estado.busqueda.toLowerCase();
+    const okTxt = p.nombre.toLowerCase().includes(q) || p.campesino.toLowerCase().includes(q) || p.zona.toLowerCase().includes(q);
+    return okCat && okTxt;
   });
 
-  const productosHtml = filtrados.map((p) => {
+  const gridHtml = filtrados.map((p) => {
     const cant = estado.carrito[p.id] || 0;
     return `
-      <article class="product-card">
+      <article class="product-card card-accent">
         <div>
-          <div class="product-emoji">${p.emoji}</div>
+          <div class="product-top">
+            <div class="cat-circle ${p.colorCat}">${p.emoji}</div>
+          </div>
           <div class="product-name">${p.nombre}</div>
           <div class="product-farmer">${p.campesino}</div>
-          <div class="product-price">${formatoCOP(p.precio)} <span class="product-unit">/ ${p.unidad}</span></div>
         </div>
-        <div class="qty-selector">
-          <button class="qty-btn" onclick="cambiarCantidad(${p.id}, -1)" aria-label="Quitar">−</button>
-          <span class="qty-value">${cant}</span>
-          <button class="qty-btn" onclick="cambiarCantidad(${p.id}, 1)" aria-label="Agregar">+</button>
+        <div class="product-foot">
+          <div class="product-price">
+            ${formatoCOP(p.precio)}
+            <span class="product-unit">${p.unidad}</span>
+          </div>
+          ${
+            cant === 0
+              ? `<button class="btn-add-circle" onclick="cambiarCantidad(${p.id}, 1)" aria-label="Agregar">+</button>`
+              : `<div class="qty-pill">
+                   <button class="qty-mini" onclick="cambiarCantidad(${p.id}, -1)">−</button>
+                   <strong style="font-size:15px;">${cant}</strong>
+                   <button class="qty-mini" onclick="cambiarCantidad(${p.id}, 1)">+</button>
+                 </div>`
+          }
         </div>
       </article>
     `;
   }).join("");
 
   document.getElementById("main-view").innerHTML = `
-    <h1 class="page-title">Mercado fresco</h1>
-    <input class="search-input" type="search" placeholder="Buscar papa, tomate, campesino..."
-      value="${estado.busqueda}" oninput="actualizarBusqueda(this.value)">
+    <div class="search-box">
+      <span class="search-ico">🔍</span>
+      <input class="search-input" type="search" placeholder="Busca papa, tomate, Sibaté..."
+        value="${estado.busqueda}" oninput="actualizarBusqueda(this.value)">
+    </div>
+
+    ${
+      estado.busqueda === "" ? `
+        <div class="section-head" style="margin-top:6px;">
+          <h3 class="section-title">Recién cosechado hoy</h3>
+          <span class="section-sub">Directo del surco</span>
+        </div>
+        <div class="carousel">${frescos}</div>
+
+        <div class="fair-banner">
+          <span style="font-size:26px;">🌱</span>
+          <span>El campesino recibe lo que fija por su cosecha, sin intermediarios innecesarios.</span>
+        </div>
+
+        <div class="section-head">
+          <h3 class="section-title">Los más pedidos</h3>
+          <span class="section-sub">Favoritos</span>
+        </div>
+        <div class="carousel">${masPedidos}</div>
+      ` : ""
+    }
+
+    <div class="section-head">
+      <h3 class="section-title">Explora por categoría</h3>
+    </div>
     <div class="chips-row">${chipsHtml}</div>
     <div class="products-grid">
-      ${productosHtml || `<p style="grid-column:1/-1; color:var(--texto-suave);">No encontramos productos con ese nombre.</p>`}
+      ${gridHtml || `<p style="grid-column:1/-1; color:var(--texto-suave);">No encontramos productos con esa búsqueda.</p>`}
     </div>
   `;
 }
 
-function actualizarBusqueda(texto) {
-  estado.busqueda = texto;
+function actualizarBusqueda(txt) {
+  estado.busqueda = txt;
   vistaMercado();
 }
 
@@ -226,65 +346,109 @@ function filtrarCategoria(cat) {
   vistaMercado();
 }
 
-function cambiarCantidad(idProducto, cambio) {
+function cambiarCantidad(idProducto, delta) {
   const actual = estado.carrito[idProducto] || 0;
-  const nuevo = Math.max(0, actual + cambio);
+  const nuevo = Math.max(0, actual + delta);
   if (nuevo === 0) delete estado.carrito[idProducto];
   else estado.carrito[idProducto] = nuevo;
 
+  if (delta > 0 && actual === 0) mostrarToast("¡Agregado a tu canasta!");
   dibujarBarraInferior();
   dibujarVistaActual();
 }
 
 // ======================================================
-// PERFIL FAMILIA: 2. CARRITO Y PAGO SIMULADO
+// PERFIL FAMILIA: 2. CARRITO E IMPACTO REAL
 // ======================================================
 
 function calcularTotalesCarrito() {
   let subtotal = 0;
+  const campesinos = new Set();
+  const zonas = new Set();
+
   for (const [id, cant] of Object.entries(estado.carrito)) {
     const prod = PRODUCTOS.find((p) => p.id === Number(id));
-    if (prod) subtotal += prod.precio * cant;
+    if (prod && cant > 0) {
+      subtotal += prod.precio * cant;
+      campesinos.add(prod.campesino);
+      zonas.add(prod.zona);
+    }
   }
   const envio = subtotal > 0 ? 15000 : 0;
-  const servicio = Math.round(subtotal * 0.04); // 4% de los productos
+  const servicio = Math.round(subtotal * 0.04);
   const total = subtotal + envio + servicio;
-  return { subtotal, envio, servicio, total };
+  return { subtotal, envio, servicio, total, numCampesinos: campesinos.size, zonas: [...zonas] };
 }
 
 function vistaCarrito() {
-  const items = Object.entries(estado.carrito).map(([id, cant]) => {
-    const prod = PRODUCTOS.find((p) => p.id === Number(id));
-    return { ...prod, cant };
-  });
+  const items = Object.entries(estado.carrito)
+    .map(([id, cant]) => ({ ...PRODUCTOS.find((p) => p.id === Number(id)), cant }))
+    .filter((i) => i.id && i.cant > 0);
 
-  const { subtotal, envio, servicio, total } = calcularTotalesCarrito();
+  if (items.length === 0) {
+    document.getElementById("main-view").innerHTML = `
+      <div class="card" style="text-align:center; padding:32px 20px; margin-top:12px;">
+        <svg viewBox="0 0 120 100" width="110" height="92" style="margin-bottom:12px;" aria-hidden="true">
+          <circle cx="60" cy="54" r="42" fill="#EFE4D4"/>
+          <path d="M28 52 H92 L84 82 H36 Z" fill="#8B5E3C"/>
+          <path d="M40 52 C40 30, 80 30, 80 52" stroke="#2F6B3A" stroke-width="6" fill="none" stroke-linecap="round"/>
+        </svg>
+        <h2 style="font-size:22px; margin-bottom:6px;">Tu canasta está vacía</h2>
+        <p style="color:var(--texto-suave); margin-bottom:14px;">Agrega frutas, verduras y tubérculos frescos directo de nuestros campesinos.</p>
+        <button class="btn-primary" onclick="cambiarPestana('mercado')">Ir al mercado</button>
+      </div>
+    `;
+    return;
+  }
 
-  const listaHtml = items.length
-    ? items.map((item) => `
-        <div class="cart-row">
-          <div>
-            <strong>${item.emoji} ${item.nombre}</strong>
-            <div style="font-size:14px; color:var(--texto-suave);">${item.cant} × ${formatoCOP(item.precio)}</div>
-          </div>
-          <strong>${formatoCOP(item.precio * item.cant)}</strong>
+  const { subtotal, envio, servicio, total, numCampesinos, zonas } = calcularTotalesCarrito();
+
+  const listaHtml = items.map((item) => `
+    <div class="cart-row">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="cat-circle ${item.colorCat}" style="width:46px; height:46px; font-size:24px;">${item.emoji}</div>
+        <div>
+          <strong>${item.nombre}</strong>
+          <div style="font-size:13px; color:var(--texto-suave);">${formatoCOP(item.precio)} · ${item.unidad}</div>
         </div>
-      `).join("")
-    : `<p style="color:var(--texto-suave); text-align:center; padding:16px 0;">Tu carrito está vacío. Agrega productos en Mercado.</p>`;
+      </div>
+      <div style="text-align:right;">
+        <div class="qty-pill" style="margin-bottom:4px;">
+          <button class="qty-mini" onclick="cambiarCantidad(${item.id}, -1)">−</button>
+          <strong style="font-size:14px;">${item.cant}</strong>
+          <button class="qty-mini" onclick="cambiarCantidad(${item.id}, 1)">+</button>
+        </div>
+        <strong style="font-size:14px; color:var(--bosque);">${formatoCOP(item.precio * item.cant)}</strong>
+      </div>
+    </div>
+  `).join("");
 
   document.getElementById("main-view").innerHTML = `
-    <h1 class="page-title">Tu carrito</h1>
+    <div class="section-head" style="margin-top:6px;">
+      <h3 class="section-title">Tu carrito</h3>
+      <span class="section-sub">${items.length} productos</span>
+    </div>
+
+    <div class="impact-card">
+      <span style="font-size:32px;">🤝</span>
+      <div>
+        <strong style="color:var(--bosque); display:block;">Impacto de tu compra</strong>
+        <span style="font-size:15px;">Con tu compra apoyas a <strong>${numCampesinos} campesinos</strong> de <strong>${zonas.join(", ")}</strong>.</span>
+      </div>
+    </div>
+
     <div class="card">${listaHtml}</div>
 
     <div class="summary-card">
-      <div class="sub-title">Resumen claro de tu compra</div>
+      <div class="section-sub" style="margin-bottom:10px;">Resumen transparente</div>
       <div class="summary-line"><span>Productos</span><strong>${formatoCOP(subtotal)}</strong></div>
       <div class="summary-line"><span>Envío</span><strong>${formatoCOP(envio)}</strong></div>
       <div class="summary-line"><span>Servicio (4%)</span><strong>${formatoCOP(servicio)}</strong></div>
-      <div class="summary-total"><span>Total</span><span>${formatoCOP(total)}</span></div>
-      <button class="btn-primary" ${subtotal === 0 ? "disabled" : ""} onclick="abrirModalPago()">
-        Pagar ${formatoCOP(total)}
-      </button>
+      <div class="summary-total">
+        <span>Total</span>
+        <span data-count="${total}">${formatoCOP(total)}</span>
+      </div>
+      <button class="btn-primary" onclick="abrirModalPago()">Pagar ${formatoCOP(total)}</button>
     </div>
   `;
 }
@@ -292,7 +456,7 @@ function vistaCarrito() {
 function abrirModalPago() {
   const { total } = calcularTotalesCarrito();
   const metodos = ["Nequi", "Daviplata", "Tarjeta"];
-  const opcionesHtml = metodos.map((m) => `
+  const opciones = metodos.map((m) => `
     <button class="pay-option ${estado.metodoPago === m ? "selected" : ""}" onclick="elegirMetodoPago('${m}')">
       <span>${m === "Nequi" ? "📱" : m === "Daviplata" ? "📲" : "💳"} ${m}</span>
       <span>${estado.metodoPago === m ? "●" : "○"}</span>
@@ -300,112 +464,124 @@ function abrirModalPago() {
   `).join("");
 
   abrirModal(`
-    <h2 class="page-title" style="margin-bottom:8px;">Elige cómo pagar</h2>
-    <p style="color:var(--texto-suave); margin-bottom:16px;">Total a pagar: <strong>${formatoCOP(total)}</strong></p>
-    ${opcionesHtml}
+    <h2 class="section-title" style="margin-bottom:6px;">Elige cómo pagar</h2>
+    <p style="color:var(--texto-suave); margin-bottom:14px;">Total a pagar: <strong>${formatoCOP(total)}</strong></p>
+    ${opciones}
     <button class="btn-primary" onclick="confirmarPagoSimulado()">Confirmar pago con ${estado.metodoPago}</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
 
-function elegirMetodoPago(metodo) {
-  estado.metodoPago = metodo;
+function elegirMetodoPago(m) {
+  estado.metodoPago = m;
   abrirModalPago();
 }
 
 function confirmarPagoSimulado() {
   const { subtotal, envio } = calcularTotalesCarrito();
-  const pedidoCompartido = estado.pedidos[0]; // #RJ-1024
-  pedidoCompartido.valorProductos = subtotal;
-  pedidoCompartido.envio = envio;
+  estado.pedidos[0].valorProductos = subtotal;
+  estado.pedidos[0].envio = envio;
 
   abrirModal(`
-    <div style="text-align:center; padding:10px 0;">
+    <div style="text-align:center; padding:8px 0;">
       <div class="success-check">✓</div>
-      <h2 class="page-title" style="margin-bottom:6px;">¡Pago confirmado!</h2>
-      <p style="color:var(--texto-suave); margin-bottom:18px;">
-        Tu pedido <strong>#RJ-1024</strong> ya fue enviado al campesino Hernando Rojas.
+      <h2 class="section-title" style="margin-bottom:6px;">¡Pago confirmado!</h2>
+      <p style="color:var(--texto-suave); margin-bottom:16px;">
+        Tu pedido <strong>#RJ-1024</strong> ya llegó a la finca de Hernando Rojas en Sibaté.
       </p>
-      <button class="btn-primary" onclick="irAMiPedidoDespuesDePago()">Ver mi pedido #RJ-1024</button>
+      <button class="btn-primary" onclick="cerrarModal(); mostrarToast('¡Listo! Pedido confirmado'); cambiarPestana('pedido');">
+        Ver mi pedido #RJ-1024
+      </button>
     </div>
   `);
 }
 
-function irAMiPedidoDespuesDePago() {
-  cerrarModal();
-  mostrarToast("¡Listo! Pedido confirmado");
-  cambiarPestana("pedido");
-}
-
 // ======================================================
-// PERFIL FAMILIA: 3. MI PEDIDO #RJ-1024
+// PERFIL FAMILIA: 3. MI PEDIDO #RJ-1024 + MAPA SVG
 // ======================================================
 
 function vistaMiPedido() {
-  const pedido = estado.pedidos[0]; // #RJ-1024 compartido
+  const pedido = estado.pedidos[0];
   const pasos = [
-    { nombre: "Pedido confirmado", desc: "Hernando recibió tu lista de mercado." },
-    { nombre: "Preparando", desc: "Cosechando y empacando tus alimentos frescos." },
-    { nombre: "Enviado por el campesino", desc: "Tu mercado va camino a tu puerta." },
-    { nombre: "Entregado", desc: "Mercado entregado directamente a tu familia." }
+    { nombre: "Pedido confirmado", desc: "Hernando recibió tu lista de mercado.", ico: "📝" },
+    { nombre: "Preparando", desc: "Cosechando y empacando tus alimentos.", ico: "🧺" },
+    { nombre: "Enviado por el campesino", desc: "Tu mercado va camino a tu puerta.", ico: "🌿" },
+    { nombre: "Entregado", desc: "Recibido directamente en tu hogar.", ico: "🏡" }
   ];
-
-  const indiceActual = pasos.findIndex((p) => p.nombre === pedido.estado);
+  const idxActual = pasos.findIndex((p) => p.nombre === pedido.estado);
 
   const timelineHtml = pasos.map((p, idx) => `
-    <div class="step ${idx <= indiceActual ? "done" : ""}">
-      <div class="step-dot">${idx <= indiceActual ? "✓" : idx + 1}</div>
+    <div class="step ${idx <= idxActual ? "done" : ""} ${idx === idxActual && idx < 3 ? "current" : ""}">
+      <div class="step-ico">${p.ico}</div>
       <div>
         <strong>${p.nombre}</strong>
-        <p>${p.desc}</p>
+        <p style="font-size:14px; color:var(--texto-suave);">${p.desc}</p>
       </div>
     </div>
   `).join("");
 
-  let accionFinalHtml = "";
+  let cierreHtml = "";
   if (!pedido.recibidoPorFamilia) {
-    accionFinalHtml = `
-      <button class="btn-primary" onclick="confirmarReciboFamilia()">
-        Confirmar que recibí mi mercado
-      </button>
-    `;
+    cierreHtml = `<button class="btn-primary" onclick="confirmarReciboFamilia()">Confirmar que recibí mi mercado</button>`;
   } else {
-    const estrellasHtml = [1, 2, 3, 4, 5].map((n) => `
+    const estrellas = [1, 2, 3, 4, 5].map((n) => `
       <button class="star-btn ${pedido.calificacion >= n ? "active" : ""}" onclick="calificarPedido(${n})">★</button>
     `).join("");
-
-    accionFinalHtml = `
-      <div class="card" style="text-align:center; border-color:var(--hoja);">
-        <div class="sub-title" style="color:var(--bosque);">¡Gracias por confirmar!</div>
-        <p style="font-size:15px; color:var(--texto-suave);">Califica la frescura y atención de Hernando:</p>
-        <div class="stars-row">${estrellasHtml}</div>
-        ${pedido.calificacion > 0 ? `<p style="font-weight:700; color:var(--bosque);">Calificaste con ${pedido.calificacion} estrellas</p>` : ""}
+    cierreHtml = `
+      <div class="card card-accent" style="text-align:center;">
+        <strong style="color:var(--bosque); font-size:18px;">¡Gracias por confirmar!</strong>
+        <p style="font-size:15px; color:var(--texto-suave); margin-top:4px;">Califica la frescura de la cosecha de Hernando:</p>
+        <div class="stars-row">${estrellas}</div>
+        ${pedido.calificacion > 0 ? `<p style="font-weight:800; color:var(--bosque);">Calificaste con ${pedido.calificacion} estrellas</p>` : ""}
       </div>
     `;
   }
 
   document.getElementById("main-view").innerHTML = `
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-      <h1 class="page-title" style="margin:0;">Mi pedido #${pedido.id}</h1>
+    <div class="section-head" style="margin-top:6px;">
+      <h3 class="section-title">Mi pedido #${pedido.id}</h3>
       <span class="badge ${pedido.estado === "Entregado" ? "badge-entregado" : "badge-hoja"}">${pedido.estado}</span>
     </div>
 
-    <!-- Tarjeta del campesino -->
-    <div class="card" style="display:flex; align-items:center; gap:14px;">
-      <div class="initials-circle initials-earth">HR</div>
-      <div>
-        <div style="font-size:13px; font-weight:700; color:var(--naranja);">TU CAMPESINO</div>
-        <strong style="font-size:18px;">${estado.campesino.nombre}</strong>
-        <div style="font-size:14px; color:var(--texto-suave);">${estado.campesino.vereda}</div>
-      </div>
+    <!-- Mapa simple en SVG de la finca a la casa -->
+    <div class="card" style="padding:14px;">
+      <div class="section-sub" style="margin-bottom:8px;">Ruta directa: Sibaté → Tu puerta</div>
+      <svg viewBox="0 0 360 110" width="100%" height="110" aria-label="Mapa de ruta de la finca a la casa">
+        <rect width="360" height="110" rx="14" fill="#F4EFE4"/>
+        <path d="M0 88 Q90 60 180 76 T360 66 L360 110 L0 110 Z" fill="#E4F3E1"/>
+        <path d="M52 62 C115 24, 240 94, 308 48" stroke="#2F6B3A" stroke-width="4" stroke-dasharray="7 6" fill="none" stroke-linecap="round"/>
+        <!-- Punto Finca -->
+        <circle cx="52" cy="62" r="16" fill="#8B5E3C"/>
+        <text x="52" y="68" text-anchor="middle" font-size="16">🌾</text>
+        <text x="52" y="96" text-anchor="middle" font-size="11" font-weight="700" fill="#2B2B2B">Finca Sibaté</text>
+        <!-- Punto Casa -->
+        <circle cx="308" cy="48" r="16" fill="#2F6B3A"/>
+        <text x="308" y="54" text-anchor="middle" font-size="16">🏡</text>
+        <text x="308" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#2B2B2B">Tu hogar</text>
+      </svg>
     </div>
 
-    <div class="card">
-      <div class="sub-title">Estado de tu mercado</div>
+    <!-- Línea de tiempo -->
+    <div class="card card-accent">
+      <div class="section-sub">Seguimiento en vivo</div>
       <div class="timeline">${timelineHtml}</div>
     </div>
 
-    ${accionFinalHtml}
+    <!-- Tarjeta del campesino con historia y frase -->
+    <div class="card card-accent card-accent-earth">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+        <div class="initials-circle initials-earth">HR</div>
+        <div>
+          <span style="font-size:12px; font-weight:800; color:var(--naranja);">TU CAMPESINO</span>
+          <strong style="display:block; font-size:18px;">${estado.campesino.nombre}</strong>
+          <span style="font-size:14px; color:var(--texto-suave);">${estado.campesino.vereda}</span>
+        </div>
+      </div>
+      <p style="font-size:15px; color:var(--texto-suave);">${estado.campesino.historia}</p>
+      <div class="farmer-quote">${estado.campesino.frase}</div>
+    </div>
+
+    ${cierreHtml}
   `;
 }
 
@@ -418,73 +594,122 @@ function confirmarReciboFamilia() {
   vistaMiPedido();
 }
 
-function calificarPedido(estrellas) {
-  estado.pedidos[0].calificacion = estrellas;
-  mostrarToast("¡Gracias por tu calificación!");
+function calificarPedido(n) {
+  estado.pedidos[0].calificacion = n;
+  mostrarToast("¡Gracias por calificar!");
   vistaMiPedido();
 }
 
 // ======================================================
-// PERFIL CAMPESINO: 1. PEDIDOS
+// PERFIL CAMPESINO: 1. PEDIDOS + KPIs + GRÁFICA SVG
 // ======================================================
 
+function graficaBarrasSVG() {
+  const max = Math.max(...VENTAS_7_DIAS.map((v) => v.monto));
+  const barras = VENTAS_7_DIAS.map((v, i) => {
+    const h = Math.round((v.monto / max) * 70);
+    const x = 14 + i * 48;
+    const y = 86 - h;
+    const fill = i === VENTAS_7_DIAS.length - 1 ? "#D9822B" : "#6FAE4F";
+    return `
+      <rect x="${x}" y="${y}" width="26" height="${h}" rx="7" fill="${fill}"/>
+      <text x="${x + 13}" y="104" text-anchor="middle" font-size="11" font-weight="700" fill="#595751">${v.dia}</text>
+    `;
+  }).join("");
+
+  return `
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <strong style="font-size:16px;">Ventas últimos 7 días</strong>
+        <span style="font-size:13px; font-weight:700; color:var(--naranja);">Hoy en curso</span>
+      </div>
+      <svg viewBox="0 0 350 112" width="100%" height="112" aria-label="Gráfica de ventas de los últimos 7 días">
+        ${barras}
+      </svg>
+    </div>
+  `;
+}
+
 function vistaPedidosCampesino() {
+  const porAlistar = estado.pedidos.filter((p) => p.estado !== "Entregado").length;
+
   const tarjetas = estado.pedidos.map((p) => {
     const totalCampesino = p.valorProductos + p.envio;
-    let botonAccion = "";
+    const itemsHtml = p.listaAlistamiento.map((it) => `<li>• ${it}</li>`).join("");
+    let btnHtml = "";
 
     if (!p.aceptado) {
-      botonAccion = `<button class="btn-primary" onclick="aceptarPedidoCampesino('${p.id}')">Aceptar</button>`;
+      btnHtml = `<button class="btn-primary" onclick="aceptarPedidoCampesino('${p.id}')">Aceptar</button>`;
     } else if (p.estado === "Pedido confirmado") {
-      botonAccion = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Preparando', 'Marcar preparando')">Marcar preparando</button>`;
+      btnHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Preparando', 'Marcar preparando')">Marcar preparando</button>`;
     } else if (p.estado === "Preparando") {
-      botonAccion = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Enviado por el campesino', 'Marcar enviado')">Marcar enviado</button>`;
+      btnHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Enviado por el campesino', 'Marcar enviado')">Marcar enviado</button>`;
     } else if (p.estado === "Enviado por el campesino") {
-      botonAccion = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Entregado', 'Marcar entregado')">Marcar entregado</button>`;
+      btnHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Entregado', 'Marcar entregado')">Marcar entregado</button>`;
     } else {
-      botonAccion = `<div style="margin-top:12px; font-weight:800; color:var(--bosque);">✓ Pedido completado y sumado a tu saldo</div>`;
+      btnHtml = `<div style="margin-top:12px; font-weight:800; color:var(--bosque);">✓ Entregado y sumado a tu saldo</div>`;
     }
 
     return `
-      <article class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+      <article class="card card-accent card-accent-orange">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
           <strong style="font-size:18px;">Pedido #${p.id}</strong>
           <span class="badge ${p.estado === "Entregado" ? "badge-entregado" : "badge-naranja"}">${p.estado}</span>
         </div>
         <p style="font-weight:700;">${p.familia}</p>
-        <p style="font-size:15px; color:var(--texto-suave); margin:4px 0;">${p.productosTexto}</p>
-        <p style="font-size:14px; color:var(--tierra); margin-bottom:10px;">📍 ${p.direccion}</p>
-        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--borde); padding-top:10px;">
-          <span style="color:var(--texto-suave);">Recibes (productos + envío)</span>
-          <strong style="font-size:19px; color:var(--bosque);">${formatoCOP(totalCampesino)}</strong>
+        <p style="font-size:14px; color:var(--tierra); margin-top:2px;">📍 ${p.direccion}</p>
+        <ul class="checklist">${itemsHtml}</ul>
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:14px; color:var(--texto-suave);">Recibes (productos + envío)</span>
+          <strong style="font-size:20px; color:var(--bosque);">${formatoCOP(totalCampesino)}</strong>
         </div>
-        ${botonAccion}
+        ${btnHtml}
       </article>
     `;
   }).join("");
 
   document.getElementById("main-view").innerHTML = `
-    <h1 class="page-title">Pedidos entrantes</h1>
+    <div class="kpi-grid" style="margin-top:8px;">
+      <div class="kpi-card">
+        <div class="kpi-label">Por alistar</div>
+        <div class="kpi-val">${porAlistar}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Semana</div>
+        <div class="kpi-val" style="font-size:15px;">${formatoCOP(estado.campesino.ventasSemana)}</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Mi saldo</div>
+        <div class="kpi-val" style="font-size:15px;" data-count="${estado.campesino.saldo}">${formatoCOP(estado.campesino.saldo)}</div>
+      </div>
+    </div>
+
+    ${graficaBarrasSVG()}
+
+    <div class="section-head">
+      <h3 class="section-title">Pedidos entrantes</h3>
+      <span class="section-sub">Lista de alistamiento</span>
+    </div>
     ${tarjetas}
   `;
 }
 
-function aceptarPedidoCampesino(idPedido) {
-  const pedido = estado.pedidos.find((p) => p.id === idPedido);
-  if (!pedido) return;
-  pedido.aceptado = true;
+function aceptarPedidoCampesino(id) {
+  const p = estado.pedidos.find((item) => item.id === id);
+  if (!p) return;
+  p.aceptado = true;
   mostrarToast("¡Listo! Pedido aceptado");
   vistaPedidosCampesino();
 }
 
 function abrirFotoPaso(idPedido, nuevoEstado, textoBoton) {
   abrirModal(`
-    <h2 class="page-title" style="margin-bottom:6px;">${textoBoton}</h2>
+    <h2 class="section-title" style="margin-bottom:6px;">${textoBoton}</h2>
     <p style="color:var(--texto-suave);">Toma una foto rápida de respaldo para la familia (simulada).</p>
     <div class="photo-box">
       <div style="font-size:48px;">📸🧺🥕</div>
       <strong style="display:block; margin-top:8px;">Foto lista · Pedido #${idPedido}</strong>
-      <span style="font-size:14px; color:var(--texto-suave);">Se actualizará a: ${nuevoEstado}</span>
+      <span style="font-size:14px; color:var(--texto-suave);">Pasará a: ${nuevoEstado}</span>
     </div>
     <button class="btn-primary" onclick="confirmarPasoCampesino('${idPedido}', '${nuevoEstado}')">Confirmar</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
@@ -492,17 +717,14 @@ function abrirFotoPaso(idPedido, nuevoEstado, textoBoton) {
 }
 
 function confirmarPasoCampesino(idPedido, nuevoEstado) {
-  const pedido = estado.pedidos.find((p) => p.id === idPedido);
-  if (!pedido) return;
-
-  pedido.estado = nuevoEstado;
-  if (nuevoEstado === "Entregado") {
-    acreditarSaldoCampesino(pedido);
-  }
-
+  const p = estado.pedidos.find((item) => item.id === idPedido);
+  if (!p) return;
+  p.estado = nuevoEstado;
+  if (nuevoEstado === "Entregado") acreditarSaldoCampesino(p);
   cerrarModal();
   mostrarToast("¡Listo! Estado actualizado");
   vistaPedidosCampesino();
+  animarConteos();
 }
 
 function acreditarSaldoCampesino(pedido) {
@@ -512,21 +734,81 @@ function acreditarSaldoCampesino(pedido) {
   estado.campesino.historial.unshift({
     titulo: `Pedido #${pedido.id} entregado`,
     fecha: "Ahora mismo · Productos + envío",
-    monto: pago
+    monto: pago,
+    tipo: "in"
   });
   pedido.saldoAcreditado = true;
 }
 
 // ======================================================
-// PERFIL CAMPESINO: 2. MI SALDO
+// PERFIL CAMPESINO: 2. MIS PRODUCTOS (EDITABLE)
+// ======================================================
+
+function vistaMisProductos() {
+  const mios = PRODUCTOS.filter((p) => p.campesino === "Hernando Rojas");
+  const cards = mios.map((p) => `
+    <article class="card">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="cat-circle ${p.colorCat}" style="width:52px; height:52px; font-size:28px;">${p.emoji}</div>
+          <div>
+            <strong>${p.nombre}</strong>
+            <div style="font-size:13px; color:var(--texto-suave);">${p.unidad} · ${p.disponible ? "Visible en mercado" : "Pausado"}</div>
+          </div>
+        </div>
+        <label class="toggle-switch" aria-label="Disponibilidad de ${p.nombre}">
+          <input type="checkbox" ${p.disponible ? "checked" : ""} onchange="cambiarDisponibilidad(${p.id}, this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-top:12px; padding-top:12px; border-top:1px solid var(--borde);">
+        <span style="font-size:14px; font-weight:700; color:var(--tierra);">Tu precio justo (COP):</span>
+        <input class="price-input" type="number" step="500" min="1000" value="${p.precio}"
+          onchange="actualizarPrecioProducto(${p.id}, this.value)">
+      </div>
+    </article>
+  `).join("");
+
+  document.getElementById("main-view").innerHTML = `
+    <div class="section-head" style="margin-top:6px;">
+      <h3 class="section-title">Mis productos</h3>
+      <span class="section-sub">Tú fijas el precio</span>
+    </div>
+    ${cards}
+  `;
+}
+
+function cambiarDisponibilidad(id, activo) {
+  const prod = PRODUCTOS.find((p) => p.id === id);
+  if (!prod) return;
+  prod.disponible = activo;
+  mostrarToast(activo ? "¡Listo! Producto visible" : "Producto pausado");
+  vistaMisProductos();
+}
+
+function actualizarPrecioProducto(id, nuevoPrecio) {
+  const prod = PRODUCTOS.find((p) => p.id === id);
+  const valor = Number(nuevoPrecio);
+  if (!prod || isNaN(valor) || valor < 1000) return;
+  prod.precio = valor;
+  mostrarToast("¡Listo! Precio actualizado");
+}
+
+// ======================================================
+// PERFIL CAMPESINO: 3. MI SALDO
 // ======================================================
 
 function vistaSaldoCampesino() {
   const historialHtml = estado.campesino.historial.map((h) => `
     <div class="cart-row">
-      <div>
-        <strong>${h.titulo}</strong>
-        <div style="font-size:13px; color:var(--texto-suave);">${h.fecha}</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div class="cat-circle ${h.tipo === "in" ? "bg-verduras" : "bg-tuberculos"}" style="width:42px; height:42px; font-size:20px;">
+          ${h.tipo === "in" ? "⬇️" : "🏦"}
+        </div>
+        <div>
+          <strong>${h.titulo}</strong>
+          <div style="font-size:13px; color:var(--texto-suave);">${h.fecha}</div>
+        </div>
       </div>
       <strong style="color:${h.monto >= 0 ? "var(--bosque)" : "var(--tierra)"};">
         ${h.monto >= 0 ? "+" : ""}${formatoCOP(h.monto)}
@@ -535,24 +817,26 @@ function vistaSaldoCampesino() {
   `).join("");
 
   document.getElementById("main-view").innerHTML = `
-    <h1 class="page-title">Mi saldo</h1>
+    <div class="section-head" style="margin-top:6px;">
+      <h3 class="section-title">Mi saldo</h3>
+    </div>
 
     <div class="balance-card">
-      <span style="font-size:15px; opacity:0.9;">Saldo disponible</span>
-      <div class="balance-number">${formatoCOP(estado.campesino.saldo)}</div>
-      <p style="font-size:14px; opacity:0.9;">Cuenta: ${estado.campesino.cuenta}</p>
+      <span style="font-size:15px; opacity:0.92;">Saldo disponible</span>
+      <div class="balance-number" data-count="${estado.campesino.saldo}">${formatoCOP(estado.campesino.saldo)}</div>
+      <p style="font-size:14px; opacity:0.92;">Cuenta: ${estado.campesino.cuenta}</p>
       <button class="btn-primary" style="background:var(--blanco); color:var(--bosque);"
         ${estado.campesino.saldo <= 0 ? "disabled" : ""} onclick="abrirModalRetiro()">
         Retirar a mi cuenta bancaria
       </button>
     </div>
 
-    <div class="info-note">
-      <strong>Pago justo y claro:</strong> recibes el <strong>100% del valor de tus productos más el envío</strong>. El saldo aparece aquí apenas el pedido queda entregado.
+    <div class="tip-card">
+      <strong style="color:var(--tierra);">Pago claro y sin descuentos:</strong> recibes el <strong>100% del valor de tus productos más el envío</strong>. El dinero aparece disponible apenas el pedido queda entregado.
     </div>
 
     <div class="card">
-      <div class="sub-title">Historial de pagos</div>
+      <div class="section-sub" style="margin-bottom:6px;">Historial de movimientos</div>
       ${historialHtml}
     </div>
   `;
@@ -560,7 +844,7 @@ function vistaSaldoCampesino() {
 
 function abrirModalRetiro() {
   abrirModal(`
-    <h2 class="page-title" style="margin-bottom:8px;">Confirmar retiro</h2>
+    <h2 class="section-title" style="margin-bottom:6px;">Confirmar retiro</h2>
     <p style="color:var(--texto-suave); margin-bottom:14px;">
       Enviaremos <strong>${formatoCOP(estado.campesino.saldo)}</strong> a tu cuenta <strong>${estado.campesino.cuenta}</strong>.
     </p>
@@ -572,54 +856,67 @@ function abrirModalRetiro() {
 function confirmarRetiro() {
   const monto = estado.campesino.saldo;
   if (monto <= 0) return;
-
   estado.campesino.saldo = 0;
   estado.campesino.historial.unshift({
     titulo: "Retiro a cuenta bancaria",
-    fecha: "Ahora mismo",
-    monto: -monto
+    fecha: "Ahora mismo · Transferencia",
+    monto: -monto,
+    tipo: "out"
   });
-
   cerrarModal();
   mostrarToast("¡Listo! Retiro enviado");
   vistaSaldoCampesino();
 }
 
 // ======================================================
-// PERFIL CAMPESINO: 3. APRENDER
+// PERFIL CAMPESINO: 4. APRENDER + MINIATURAS SVG
 // ======================================================
 
 function vistaAprender() {
-  const cardsHtml = VIDEOS_APRENDER.map((v) => `
+  const videosHtml = VIDEOS_APRENDER.map((v) => `
     <article class="card video-card" onclick="abrirVideo(${v.id})">
-      <div class="play-circle">▶</div>
-      <div>
-        <span class="badge badge-hoja" style="margin-bottom:4px;">Video gratis · ${v.duracion}</span>
-        <strong style="display:block; font-size:17px;">${v.titulo}</strong>
+      <div class="video-thumb">
+        <svg viewBox="0 0 84 64" width="84" height="64" aria-hidden="true">
+          <rect width="84" height="64" fill="${v.color}"/>
+          <circle cx="68" cy="14" r="18" fill="rgba(255,255,255,0.14)"/>
+          <circle cx="42" cy="32" r="16" fill="rgba(255,255,255,0.92)"/>
+          <polygon points="38,24 52,32 38,40" fill="${v.color}"/>
+        </svg>
+      </div>
+      <div style="flex:1;">
+        <span class="badge badge-hoja" style="margin-bottom:4px;">Gratis · ${v.duracion}</span>
+        <strong style="display:block; font-size:16px; line-height:1.25;">${v.titulo}</strong>
       </div>
     </article>
   `).join("");
 
   document.getElementById("main-view").innerHTML = `
-    <h1 class="page-title">Aprender</h1>
-    <p style="color:var(--texto-suave); margin-bottom:16px;">
-      Videos cortos y gratuitos para fortalecer tu finca y tus ganancias.
-    </p>
-    ${cardsHtml}
+    <div class="section-head" style="margin-top:6px;">
+      <h3 class="section-title">Aprender</h3>
+      <span class="section-sub">Clases cortas</span>
+    </div>
+
+    <div class="tip-card">
+      <span style="font-size:13px; font-weight:800; color:var(--naranja);">💡 CONSEJO DEL DÍA</span>
+      <strong style="display:block; font-size:17px; margin:4px 0;">Incluye tu trabajo en el precio</strong>
+      <p style="font-size:15px; color:var(--texto);">Antes de fijar el valor por kilo, suma semillas, abono, empaque y las horas que trabajaste en el surco. Tu tiempo también vale.</p>
+    </div>
+
+    ${videosHtml}
   `;
 }
 
-function abrirVideo(idVideo) {
-  const v = VIDEOS_APRENDER.find((item) => item.id === idVideo);
+function abrirVideo(id) {
+  const v = VIDEOS_APRENDER.find((item) => item.id === id);
   if (!v) return;
   abrirModal(`
     <span class="badge badge-hoja">Video gratis · ${v.duracion}</span>
-    <h2 class="page-title" style="margin:10px 0 8px;">${v.titulo}</h2>
-    <div class="photo-box" style="background:var(--bosque); color:var(--blanco); border:none;">
-      <div style="font-size:44px;">🎬</div>
+    <h2 class="section-title" style="margin:8px 0;">${v.titulo}</h2>
+    <div class="photo-box" style="background:${v.color}; color:#FFF; border:none;">
+      <div style="font-size:44px;">${v.emoji}</div>
       <strong style="display:block; margin-top:6px;">Reproduciendo clase simulada</strong>
     </div>
-    <p style="font-size:16px; color:var(--texto); margin-bottom:12px;">${v.resumen}</p>
+    <p style="font-size:16px; margin-bottom:12px;">${v.resumen}</p>
     <button class="btn-primary" onclick="cerrarModal()">Entendido</button>
   `);
 }
@@ -637,6 +934,6 @@ function cerrarModal() {
   document.getElementById("modal-overlay").classList.add("hidden");
 }
 
-function cerrarModalFondo(event) {
-  if (event.target.id === "modal-overlay") cerrarModal();
+function cerrarModalFondo(e) {
+  if (e.target.id === "modal-overlay") cerrarModal();
 }
