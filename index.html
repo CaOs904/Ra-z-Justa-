@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2e7d32">
+  <title>Del Campo a Tu Mesa - Cliente</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Barra Superior -->
+  <header class="app-header">
+    <div>
+      <h1>Del Campo 🌾</h1>
+      <p class="subtitle">Directo del productor a tu hogar</p>
+    </div>
+    <button class="cart-btn" onclick="toggleCart()">
+      🛒 <span id="cart-count">0</span>
+    </button>
+  </header>
+
+  <!-- Navegación por Categorías -->
+  <nav class="categories">
+    <button class="cat-btn active" onclick="filterProducts('todos', this)">Todos</button>
+    <button class="cat-btn" onclick="filterProducts('verduras', this)">Verduras</button>
+    <button class="cat-btn" onclick="filterProducts('frutas', this)">Frutas</button>
+    <button class="cat-btn" onclick="filterProducts('tuberculos', this)">Tubérculos</button>
+    <button class="cat-btn" onclick="filterProducts('lacteos', this)">Lácteos y Huevos</button>
+  </nav>
+
+  <!-- Vista Principal: Catálogo -->
+  <main id="catalog-view" class="container">
+    <div class="banner">
+      <strong>🌱 Compra justa:</strong> El 100% del valor del producto va directo al agricultor.
+    </div>
+    <div id="products-grid" class="products-grid">
+      <!-- Se llena dinámicamente desde app.js -->
+    </div>
+  </main>
+
+  <!-- Vista de Seguimiento del Pedido (Simulación en vivo) -->
+  <section id="tracking-view" class="container hidden">
+    <div class="tracking-card">
+      <div class="tracking-header">
+        <span class="badge-live">● Pedido Activo</span>
+        <span id="order-id">#AG-1024</span>
+      </div>
+      <h2>Estado de tu mercado</h2>
+      <p class="farmer-info" id="tracking-farmer">Productor: Don Pedro Gómez (Finca El Roble)</p>
+
+      <div class="timeline">
+        <div class="step active" id="step-1">
+          <div class="dot">1</div>
+          <div>
+            <strong>Pedido recibido por el campesino</strong>
+            <p>Don Pedro está alistando tu cosecha fresca.</p>
+          </div>
+        </div>
+        <div class="step" id="step-2">
+          <div class="dot">2</div>
+          <div>
+            <strong>Transportista asignado</strong>
+            <p>Carlos M. (Camioneta Rural) va camino a recogerlo.</p>
+          </div>
+        </div>
+        <div class="step" id="step-3">
+          <div class="dot">3</div>
+          <div>
+            <strong>En camino a tu dirección</strong>
+            <p>Tiempo estimado de entrega: 25 mins.</p>
+          </div>
+        </div>
+        <div class="step" id="step-4">
+          <div class="dot">4</div>
+          <div>
+            <strong>¡Mercado entregado!</strong>
+            <p>Gracias por apoyar el agro local.</p>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-secondary" onclick="advanceOrderDemo()">
+        ⏩ Simular siguiente paso (Demo)
+      </button>
+      <button class="btn-outline" onclick="resetApp()">
+        Hacer otro mercado
+      </button>
+    </div>
+  </section>
+
+  <!-- Modal / Drawer del Carrito -->
+  <div id="cart-modal" class="modal hidden">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Tu Canasta Campesina</h2>
+        <button class="close-btn" onclick="toggleCart()">✕</button>
+      </div>
+
+      <div id="cart-items" class="cart-items">
+        <!-- Ítems del carrito -->
+      </div>
+
+      <div class="delivery-form">
+        <label for="address">Dirección de entrega:</label>
+        <input type="text" id="address" value="Calle 127 # 15-40, Apto 302" placeholder="Ingresa tu dirección">
+        
+        <label for="payment">Método de pago:</label>
+        <select id="payment">
+          <option value="efectivo">Contraentrega en Efectivo</option>
+          <option value="nequi">Nequi / Daviplata</option>
+          <option value="pse">Transferencia PSE</option>
+        </select>
+      </div>
+
+      <div class="cart-summary">
+        <div class="summary-row">
+          <span>Productos (Para el campesino):</span>
+          <span id="subtotal-price">$0</span>
+        </div>
+        <div class="summary-row">
+          <span>Flete rural (Para el transportista):</span>
+          <span>$6.000</span>
+        </div>
+        <div class="summary-row total">
+          <span>Total a pagar:</span>
+          <span id="total-price">$0</span>
+        </div>
+        <button class="btn-primary" onclick="placeOrder()">Confirmar Pedido al Campesino</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js');
+    }
+  </script>
+</body>
+    </html>
+    
