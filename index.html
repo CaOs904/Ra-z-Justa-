@@ -1,86 +1,100 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-CO">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#2e7d32">
+  <meta name="theme-color" content="#2F6B3A">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Raíz Justa Aliados</title>
+  <title>Raíz Justa</title>
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
 
   <!-- PANTALLA DE BIENVENIDA -->
-  <section id="welcome-screen" class="screen active">
-    <div class="welcome-hero">
-      <div class="logo-badge">🌱</div>
-      <h1>Raíz Justa</h1>
-      <p class="brand-tag">APP DE ALIADOS</p>
-      <p class="welcome-desc">
-        Conectamos la cosecha fresca del campo directo con los hogares de la ciudad. Elige tu perfil para empezar:
-      </p>
+  <section id="welcome-screen" class="screen">
+    <div class="welcome-top">
+      <!-- Logo SVG propio: hoja que nace de una raíz -->
+      <div class="logo-wrap" aria-hidden="true">
+        <svg viewBox="0 0 120 120" width="84" height="84" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="56" fill="#FAF6EE"/>
+          <!-- Raíces en tono tierra -->
+          <path d="M60 66 C60 80, 48 88, 38 98" stroke="#8B5E3C" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M60 66 C60 82, 72 88, 82 98" stroke="#8B5E3C" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <path d="M60 70 C60 84, 58 94, 60 104" stroke="#8B5E3C" stroke-width="4.5" stroke-linecap="round" fill="none"/>
+          <path d="M49 84 C43 85, 39 87, 34 86" stroke="#8B5E3C" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <path d="M71 84 C77 85, 81 87, 86 86" stroke="#8B5E3C" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+          <!-- Tallo -->
+          <path d="M60 68 L60 44" stroke="#2F6B3A" stroke-width="5.5" stroke-linecap="round"/>
+          <!-- Hoja principal -->
+          <path d="M60 48 C60 24, 86 18, 92 22 C94 42, 78 56, 60 48 Z" fill="#2F6B3A"/>
+          <!-- Hoja secundaria -->
+          <path d="M60 54 C58 34, 34 28, 28 34 C28 50, 44 60, 60 54 Z" fill="#6FAE4F"/>
+        </svg>
+      </div>
+      <h1 class="brand-title">Raíz Justa</h1>
+      <p class="brand-slogan">Del surco a tu puerta, con precio justo.</p>
     </div>
 
-    <div class="role-cards">
-      <button class="role-card role-farmer" onclick="selectProfile('farmer')">
-        <div class="role-icon">👨‍🌾</div>
-        <div class="role-info">
+    <div class="welcome-body">
+      <p class="welcome-prompt">Elige cómo quieres entrar hoy:</p>
+
+      <button class="role-card" onclick="entrarPerfil('familia')">
+        <div class="role-emoji">🧺</div>
+        <div class="role-text">
+          <strong>Soy familia</strong>
+          <span>Compra mercado fresco directo del campo</span>
+        </div>
+        <span class="role-chevron">›</span>
+      </button>
+
+      <button class="role-card role-campesino" onclick="entrarPerfil('campesino')">
+        <div class="role-emoji">🌾</div>
+        <div class="role-text">
           <strong>Soy campesino</strong>
-          <span>Hernando Rojas · Vereda San Miguel, Sibaté</span>
+          <span>Vende tu cosecha sin intermediarios</span>
         </div>
-        <span class="role-arrow">›</span>
-      </button>
-
-      <button class="role-card role-driver" onclick="selectProfile('driver')">
-        <div class="role-icon">🛻</div>
-        <div class="role-info">
-          <strong>Soy transportista</strong>
-          <span>Carlos Pérez · Pickup Blanca (ABC123)</span>
-        </div>
-        <span class="role-arrow">›</span>
+        <span class="role-chevron">›</span>
       </button>
     </div>
-
-    <p class="offline-note">Modo prototipo local · Funciona sin conexión</p>
   </section>
 
-  <!-- CONTENEDOR PRINCIPAL DE LA APP -->
+  <!-- ESTRUCTURA PRINCIPAL DE LA APP -->
   <div id="app-shell" class="screen hidden">
-    <header class="top-bar">
-      <div class="top-bar-user">
-        <div id="header-avatar" class="avatar-circle">👨‍🌾</div>
+    <header class="app-header">
+      <div class="header-left">
+        <div id="header-initials" class="initials-circle">FM</div>
         <div>
-          <h2 id="header-name">Hernando Rojas</h2>
-          <p id="header-sub">Sibaté, Cundinamarca</p>
+          <h2 id="header-title">Raíz Justa</h2>
+          <p id="header-subtitle">Perfil Familia</p>
         </div>
       </div>
-      <button class="switch-btn" onclick="goHome()">Cambiar perfil</button>
+      <button class="btn-switch" onclick="volverBienvenida()">Cambiar perfil</button>
     </header>
 
-    <main id="main-content" class="main-content">
-      <!-- Renderizado dinámico desde app.js -->
+    <main id="main-view" class="main-view">
+      <!-- Contenido dinámico generado por app.js -->
     </main>
 
-    <nav id="bottom-nav" class="bottom-nav">
-      <!-- Navegación inferior generada según perfil -->
+    <nav id="bottom-nav" class="bottom-nav" aria-label="Navegación principal">
+      <!-- Botones generados según perfil -->
     </nav>
   </div>
 
-  <!-- MODAL PARA FOTOS SIMULADAS, COMPROBANTES Y RETIROS -->
-  <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModalOnBackdrop(event)">
+  <!-- MODAL PARA PAGOS, FOTOS SIMULADAS, VIDEOS Y RETIROS -->
+  <div id="modal-overlay" class="modal-overlay hidden" onclick="cerrarModalFondo(event)">
     <div class="modal-sheet">
-      <div class="modal-handle"></div>
-      <div id="modal-body"></div>
+      <div class="modal-bar"></div>
+      <div id="modal-content"></div>
     </div>
   </div>
 
-  <!-- NOTIFICACIÓN TOAST -->
-  <div id="toast" class="toast hidden"></div>
+  <!-- MENSAJE CORTO TIPO "¡LISTO!" -->
+  <div id="toast" class="toast hidden">¡Listo!</div>
 
   <script src="app.js"></script>
   <script>
+    // Registra el Service Worker para modo sin conexión
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
         navigator.serviceWorker.register("./sw.js").catch(() => {});
