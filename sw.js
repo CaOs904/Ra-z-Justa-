@@ -1,5 +1,5 @@
-// Service Worker simple para que Raíz Justa abra sin conexión
-const CACHE_NAME = "raiz-justa-v1";
+// Service Worker de Raíz Justa (v2 visual) para abrir sin conexión
+const CACHE_NAME = "raiz-justa-v2";
 const ARCHIVOS = [
   "./",
   "./index.html",
@@ -8,7 +8,6 @@ const ARCHIVOS = [
   "./manifest.webmanifest"
 ];
 
-// Guarda los archivos principales al instalar
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ARCHIVOS))
@@ -16,7 +15,6 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Limpia versiones viejas de caché
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
@@ -28,7 +26,6 @@ self.addEventListener("activate", (event) => {
   self.clients.claim();
 });
 
-// Responde desde caché primero y si no está, busca en red
 self.addEventListener("fetch", (event) => {
   event.respondWith(
     caches.match(event.request).then((respuesta) => {
