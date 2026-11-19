@@ -1,9 +1,10 @@
-// Service Worker de Raíz Justa (v2 visual) para abrir sin conexión
-const CACHE_NAME = "raiz-justa-v2";
+// Service Worker de Raíz Justa (v3 con catálogo real)
+const CACHE_NAME = "raiz-justa-v3";
 const ARCHIVOS = [
   "./",
   "./index.html",
   "./styles.css",
+  "./productos.js",
   "./app.js",
   "./manifest.webmanifest"
 ];
