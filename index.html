@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#2e7d32">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Raíz Justa Aliados</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- PANTALLA DE BIENVENIDA -->
+  <section id="welcome-screen" class="screen active">
+    <div class="welcome-hero">
+      <div class="logo-badge">🌱</div>
+      <h1>Raíz Justa</h1>
+      <p class="brand-tag">APP DE ALIADOS</p>
+      <p class="welcome-desc">
+        Conectamos la cosecha fresca del campo directo con los hogares de la ciudad. Elige tu perfil para empezar:
+      </p>
+    </div>
+
+    <div class="role-cards">
+      <button class="role-card role-farmer" onclick="selectProfile('farmer')">
+        <div class="role-icon">👨‍🌾</div>
+        <div class="role-info">
+          <strong>Soy campesino</strong>
+          <span>Hernando Rojas · Vereda San Miguel, Sibaté</span>
+        </div>
+        <span class="role-arrow">›</span>
+      </button>
+
+      <button class="role-card role-driver" onclick="selectProfile('driver')">
+        <div class="role-icon">🛻</div>
+        <div class="role-info">
+          <strong>Soy transportista</strong>
+          <span>Carlos Pérez · Pickup Blanca (ABC123)</span>
+        </div>
+        <span class="role-arrow">›</span>
+      </button>
+    </div>
+
+    <p class="offline-note">Modo prototipo local · Funciona sin conexión</p>
+  </section>
+
+  <!-- CONTENEDOR PRINCIPAL DE LA APP -->
+  <div id="app-shell" class="screen hidden">
+    <header class="top-bar">
+      <div class="top-bar-user">
+        <div id="header-avatar" class="avatar-circle">👨‍🌾</div>
+        <div>
+          <h2 id="header-name">Hernando Rojas</h2>
+          <p id="header-sub">Sibaté, Cundinamarca</p>
+        </div>
+      </div>
+      <button class="switch-btn" onclick="goHome()">Cambiar perfil</button>
+    </header>
+
+    <main id="main-content" class="main-content">
+      <!-- Renderizado dinámico desde app.js -->
+    </main>
+
+    <nav id="bottom-nav" class="bottom-nav">
+      <!-- Navegación inferior generada según perfil -->
+    </nav>
+  </div>
+
+  <!-- MODAL PARA FOTOS SIMULADAS, COMPROBANTES Y RETIROS -->
+  <div id="modal-overlay" class="modal-overlay hidden" onclick="closeModalOnBackdrop(event)">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- NOTIFICACIÓN TOAST -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="app.js"></script>
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
+</body>
+</html>
