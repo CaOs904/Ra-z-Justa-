@@ -1,755 +1,642 @@
-// ==========================================
-// DATOS DE EJEMPLO Y ESTADO COMPARTIDO
-// ==========================================
+// ======================================================
+// DATOS DE EJEMPLO Y ESTADO COMPARTIDO (SIN SERVIDOR)
+// ======================================================
 
-const DRIVER_PHOTO_SVG = `
-  <svg viewBox="0 0 80 80" width="64" height="64" xmlns="http://www.w3.org/2000/svg">
-    <rect width="80" height="80" fill="#d7ccc8"/>
-    <circle cx="40" cy="30" r="15" fill="#8d6e63"/>
-    <path d="M16 74 C16 54, 64 54, 64 74 Z" fill="#2e7d32"/>
-    <path d="M25 22 Q40 10 55 22 Z" fill="#1b4d2e"/>
-    <rect x="23" y="20" width="34" height="4" rx="2" fill="#1b4d2e"/>
-  </svg>
-`;
+const PRODUCTOS = [
+  { id: 1, nombre: "Papa sabanera", categoria: "Tubérculos", campesino: "Hernando Rojas", unidad: "5 kg", precio: 25000, emoji: "🥔" },
+  { id: 2, nombre: "Plátano hartón", categoria: "Frutas", campesino: "Rosa Díaz", unidad: "3 kg", precio: 18000, emoji: "🍌" },
+  { id: 3, nombre: "Cebolla cabezona", categoria: "Verduras", campesino: "Hernando Rojas", unidad: "2 kg", precio: 12000, emoji: "🧅" },
+  { id: 4, nombre: "Zanahoria orgánica", categoria: "Verduras", campesino: "Hernando Rojas", unidad: "2 kg", precio: 10000, emoji: "🥕" },
+  { id: 5, nombre: "Tomate chonto", categoria: "Verduras", campesino: "Luis Beltrán", unidad: "2 kg", precio: 15000, emoji: "🍅" },
+  { id: 6, nombre: "Arándanos de altura", categoria: "Frutas", campesino: "Hernando Rojas", unidad: "500 g", precio: 20000, emoji: "🫐" },
+  { id: 7, nombre: "Aguacate Hass", categoria: "Frutas", campesino: "Rosa Díaz", unidad: "Malla x 6", precio: 14000, emoji: "🥑" },
+  { id: 8, nombre: "Cilantro y hierbabuena", categoria: "Hierbas", campesino: "Hernando Rojas", unidad: "2 manojos", precio: 6000, emoji: "🌿" }
+];
 
-const state = {
-  currentProfile: null, // 'farmer' | 'driver'
-  activeTab: "orders",  // farmer: 'orders' | 'wallet' | 'detail' ; driver: 'route' | 'wallet'
-  selectedOrderId: null,
+const VIDEOS_APRENDER = [
+  { id: 1, titulo: "Cómo calcular lo que te cuesta producir", duracion: "4 min", resumen: "Aprende a sumar semillas, abono, transporte y tu trabajo diario para nunca vender a pérdida." },
+  { id: 2, titulo: "Cómo fijar tu precio justo", duracion: "5 min", resumen: "Fórmula sencilla para poner un precio que cubra tus costos y te deje ganancia real." },
+  { id: 3, titulo: "Cómo negociar y no dejarte estafar", duracion: "6 min", resumen: "Consejos prácticos para acordar pagos claros y vender directo a las familias." }
+];
 
-  farmer: {
-    name: "Hernando Rojas",
-    location: "Vereda San Miguel, Sibaté, Cundinamarca",
-    farmName: "Finca El Mirador",
-    balance: 285000,
-    bankAccount: "Bancolombia Ahorros •••• 4821",
-    history: [
-      { id: "TX-101", title: "Pago pedido #RJ-392", date: "Ayer, 4:15 p. m.", amount: 94000, type: "in" },
-      { id: "TX-100", title: "Pago pedido #RJ-388", date: "17 Nov, 11:30 a. m.", amount: 112000, type: "in" },
-      { id: "TX-099", title: "Retiro a cuenta bancaria", date: "15 Nov, 6:00 p. m.", amount: -150000, type: "out" }
-    ]
-  },
+// Estado global compartido entre Perfil Familia y Perfil Campesino
+const estado = {
+  perfil: null,         // "familia" | "campesino"
+  pestana: "mercado",   // familia: mercado, carrito, pedido | campesino: pedidos, saldo, aprender
+  busqueda: "",
+  categoria: "Todas",
+  metodoPago: "Nequi",
 
-  driver: {
-    name: "Carlos Pérez",
-    vehicle: "Pickup blanca",
-    plate: "ABC123",
-    eta: "Hoy, 2:30 p. m.",
-    balance: 145000,
-    bankAccount: "Nequi / Daviplata •••• 7734",
-    history: [
-      { id: "DT-201", title: "Ruta Sur-Centro (4 entregas)", date: "Ayer, 5:40 p. m.", amount: 52000, type: "in" },
-      { id: "DT-200", title: "Retiro a cuenta bancaria", date: "16 Nov, 8:10 p. m.", amount: -100000, type: "out" }
-    ]
-  },
+  // Carrito precargado para sumar exactamente $120.000 en productos
+  carrito: { 1: 1, 2: 1, 3: 1, 4: 1, 5: 1, 6: 1, 7: 1, 8: 1 },
 
-  // 2 pedidos entrantes para Hernando Rojas
-  orders: [
+  // Pedidos del campesino (el #RJ-1024 se comparte con el perfil Familia)
+  pedidos: [
     {
-      id: "RJ-401",
-      customer: "Familia Morales",
-      address: "Cra 68 # 24B-15, Apto 402 · Bogotá",
-      status: "Pendiente", // Pendiente -> Pedido confirmado -> Enviado por el campesino -> Recogido -> En camino -> Entregado
-      total: 68500,
-      photoSent: false,
-      items: [
-        { name: "Papa sabanera lavada", qty: "10 kg", price: 24000 },
-        { name: "Fresa fresca de Sibaté", qty: "2 kg", price: 18500 },
-        { name: "Zanahoria orgánica", qty: "3 kg", price: 9000 },
-        { name: "Huevos criollos AA", qty: "1 cubeta (30 uds)", price: 17000 }
-      ]
+      id: "RJ-1024",
+      familia: "Familia Morales",
+      direccion: "Cra 68 # 24B-15, Apto 402 · Bogotá",
+      productosTexto: "Mercado semanal (8 productos frescos)",
+      valorProductos: 120000,
+      envio: 15000,
+      estado: "Pedido confirmado", // Pedido confirmado -> Preparando -> Enviado por el campesino -> Entregado
+      aceptado: false,
+      recibidoPorFamilia: false,
+      calificacion: 0,
+      saldoAcreditado: false
     },
     {
-      id: "RJ-402",
-      customer: "Familia Castro",
-      address: "Calle 127 # 18-40, Casa 6 · Bogotá",
-      status: "Pendiente",
-      total: 54000,
-      photoSent: false,
-      items: [
-        { name: "Arveja verde desgranada", qty: "2 kg", price: 18000 },
-        { name: "Papa criolla", qty: "4 kg", price: 16000 },
-        { name: "Queso campesino fresco", qty: "2 bloques (500 g)", price: 20000 }
-      ]
+      id: "RJ-1025",
+      familia: "Familia Castro",
+      direccion: "Calle 127 # 18-40, Casa 6 · Bogotá",
+      productosTexto: "Papa sabanera (5 kg), Tomate chonto (2 kg), Aguacate Hass",
+      valorProductos: 54000,
+      envio: 15000,
+      estado: "Pedido confirmado",
+      aceptado: false,
+      recibidoPorFamilia: false,
+      calificacion: 0,
+      saldoAcreditado: false
     }
   ],
 
-  // Ruta asignada para Carlos Pérez (1 finca + 4 hogares)
-  route: {
-    id: "RUTA-08",
-    status: "assigned", // assigned | accepted | rejected
-    farmsCount: 1,
-    homesCount: 4,
-    totalPay: 52000,
-    payPerDelivery: 13000,
-    pickedUp: false,
-    farmStop: {
-      farm: "Finca El Mirador (Hernando Rojas)",
-      address: "Vereda San Miguel, Km 4 vía Sibaté, Cundinamarca",
-      packages: "4 canastillas selladas (Pedidos #RJ-401 al #RJ-404)"
-    },
-    deliveries: [
-      {
-        stopNumber: 1,
-        orderId: "RJ-401",
-        family: "Familia Morales",
-        address: "Cra 68 # 24B-15, Apto 402 · Ciudad Salitre",
-        pay: 13000,
-        status: "Pedido confirmado",
-        receiptCode: "COMP-8841"
-      },
-      {
-        stopNumber: 2,
-        orderId: "RJ-402",
-        family: "Familia Castro",
-        address: "Calle 127 # 18-40, Casa 6 · Bella Suiza",
-        pay: 13000,
-        status: "Pedido confirmado",
-        receiptCode: "COMP-8842"
-      },
-      {
-        stopNumber: 3,
-        orderId: "RJ-403",
-        family: "Familia Gómez",
-        address: "Cra 15 # 93-22, Apto 601 · Chicó Norte",
-        pay: 13000,
-        status: "Enviado por el campesino",
-        receiptCode: "COMP-8843"
-      },
-      {
-        stopNumber: 4,
-        orderId: "RJ-404",
-        family: "Familia Rodríguez",
-        address: "Calle 53 # 27-19, Apto 204 · Galerías",
-        pay: 13000,
-        status: "Enviado por el campesino",
-        receiptCode: "COMP-8844"
-      }
+  campesino: {
+    nombre: "Hernando Rojas",
+    vereda: "Vereda San Miguel, Sibaté",
+    saldo: 245000,
+    cuenta: "Bancolombia Ahorros •••• 4821",
+    historial: [
+      { titulo: "Pedido #RJ-1019 entregado", fecha: "Ayer · Productos + envío", monto: 118000 },
+      { titulo: "Pedido #RJ-1015 entregado", fecha: "17 Nov · Productos + envío", monto: 127000 }
     ]
   }
 };
 
-// ==========================================
-// UTILIDADES
-// ==========================================
-
-function formatCOP(value) {
-  const abs = Math.abs(value).toLocaleString("es-CO");
-  return value < 0 ? `-$${abs}` : `$${abs}`;
+// Formato de dinero colombiano: $139.800
+function formatoCOP(valor) {
+  const signo = valor < 0 ? "-" : "";
+  return signo + "$" + Math.abs(Math.round(valor)).toLocaleString("es-CO");
 }
 
-function getStatusClass(status) {
-  const map = {
-    "Pendiente": "st-pendiente",
-    "Pedido confirmado": "st-confirmado",
-    "Enviado por el campesino": "st-enviado",
-    "Recogido": "st-recogido",
-    "En camino": "st-camino",
-    "Entregado": "st-entregado"
-  };
-  return map[status] || "st-pendiente";
+function mostrarToast(texto = "¡Listo!") {
+  const el = document.getElementById("toast");
+  el.textContent = texto;
+  el.classList.remove("hidden");
+  clearTimeout(window._timerToast);
+  window._timerToast = setTimeout(() => el.classList.add("hidden"), 2300);
 }
 
-function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.classList.remove("hidden");
-  clearTimeout(window._toastTimer);
-  window._toastTimer = setTimeout(() => {
-    toast.classList.add("hidden");
-  }, 2800);
-}
+// ======================================================
+// NAVEGACIÓN ENTRE PERFILES Y PESTAÑAS
+// ======================================================
 
-// ==========================================
-// NAVEGACIÓN PRINCIPAL
-// ==========================================
-
-function selectProfile(profile) {
-  state.currentProfile = profile;
-  state.activeTab = profile === "farmer" ? "orders" : "route";
+function entrarPerfil(perfil) {
+  estado.perfil = perfil;
+  estado.pestana = perfil === "familia" ? "mercado" : "pedidos";
 
   document.getElementById("welcome-screen").classList.add("hidden");
   document.getElementById("app-shell").classList.remove("hidden");
 
-  if (profile === "farmer") {
-    document.getElementById("header-avatar").textContent = "👨‍🌾";
-    document.getElementById("header-name").textContent = state.farmer.name;
-    document.getElementById("header-sub").textContent = "Sibaté, Cundinamarca";
+  const iniciales = document.getElementById("header-initials");
+  const titulo = document.getElementById("header-title");
+  const sub = document.getElementById("header-subtitle");
+
+  if (perfil === "familia") {
+    iniciales.textContent = "FM";
+    titulo.textContent = "Raíz Justa";
+    sub.textContent = "Perfil Familia · Bogotá";
   } else {
-    document.getElementById("header-avatar").textContent = "🛻";
-    document.getElementById("header-name").textContent = state.driver.name;
-    document.getElementById("header-sub").textContent = `${state.driver.vehicle} · ${state.driver.plate}`;
+    iniciales.textContent = "HR";
+    titulo.textContent = estado.campesino.nombre;
+    sub.textContent = estado.campesino.vereda;
   }
 
-  renderBottomNav();
-  renderCurrentView();
+  dibujarBarraInferior();
+  dibujarVistaActual();
 }
 
-function goHome() {
+function volverBienvenida() {
   document.getElementById("app-shell").classList.add("hidden");
   document.getElementById("welcome-screen").classList.remove("hidden");
 }
 
-function switchTab(tab) {
-  state.activeTab = tab;
-  renderBottomNav();
-  renderCurrentView();
+function cambiarPestana(nuevaPestana) {
+  estado.pestana = nuevaPestana;
+  dibujarBarraInferior();
+  dibujarVistaActual();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function renderBottomNav() {
+function dibujarBarraInferior() {
   const nav = document.getElementById("bottom-nav");
-  if (state.currentProfile === "farmer") {
+  if (estado.perfil === "familia") {
+    const totalUnidades = Object.values(estado.carrito).reduce((a, b) => a + b, 0);
     nav.innerHTML = `
-      <button class="nav-btn ${state.activeTab !== "wallet" ? "active" : ""}" onclick="switchTab('orders')">
-        <span class="nav-ico">🧺</span>
-        <span>Pedidos</span>
+      <button class="nav-item ${estado.pestana === "mercado" ? "active" : ""}" onclick="cambiarPestana('mercado')">
+        <span class="nav-ico">🥕</span><span>Mercado</span>
       </button>
-      <button class="nav-btn ${state.activeTab === "wallet" ? "active" : ""}" onclick="switchTab('wallet')">
-        <span class="nav-ico">💰</span>
-        <span>Mi saldo</span>
+      <button class="nav-item ${estado.pestana === "carrito" ? "active" : ""}" onclick="cambiarPestana('carrito')">
+        <span class="nav-ico">🛒</span><span>Carrito (${totalUnidades})</span>
+      </button>
+      <button class="nav-item ${estado.pestana === "pedido" ? "active" : ""}" onclick="cambiarPestana('pedido')">
+        <span class="nav-ico">📦</span><span>Mi pedido</span>
       </button>
     `;
   } else {
     nav.innerHTML = `
-      <button class="nav-btn ${state.activeTab !== "wallet" ? "active" : ""}" onclick="switchTab('route')">
-        <span class="nav-ico">🗺️</span>
-        <span>Mi ruta</span>
+      <button class="nav-item ${estado.pestana === "pedidos" ? "active" : ""}" onclick="cambiarPestana('pedidos')">
+        <span class="nav-ico">🧺</span><span>Pedidos</span>
       </button>
-      <button class="nav-btn ${state.activeTab === "wallet" ? "active" : ""}" onclick="switchTab('wallet')">
-        <span class="nav-ico">💰</span>
-        <span>Mi saldo</span>
+      <button class="nav-item ${estado.pestana === "saldo" ? "active" : ""}" onclick="cambiarPestana('saldo')">
+        <span class="nav-ico">💰</span><span>Mi saldo</span>
+      </button>
+      <button class="nav-item ${estado.pestana === "aprender" ? "active" : ""}" onclick="cambiarPestana('aprender')">
+        <span class="nav-ico">🎓</span><span>Aprender</span>
       </button>
     `;
   }
 }
 
-function renderCurrentView() {
-  if (state.currentProfile === "farmer") {
-    if (state.activeTab === "orders") renderFarmerOrders();
-    else if (state.activeTab === "detail") renderFarmerOrderDetail();
-    else renderWallet("farmer");
+function dibujarVistaActual() {
+  if (estado.perfil === "familia") {
+    if (estado.pestana === "mercado") vistaMercado();
+    if (estado.pestana === "carrito") vistaCarrito();
+    if (estado.pestana === "pedido") vistaMiPedido();
   } else {
-    if (state.activeTab === "route") renderDriverRoute();
-    else renderWallet("driver");
+    if (estado.pestana === "pedidos") vistaPedidosCampesino();
+    if (estado.pestana === "saldo") vistaSaldoCampesino();
+    if (estado.pestana === "aprender") vistaAprender();
   }
 }
 
-// ==========================================
-// VISTAS DEL CAMPESINO (HERNANDO ROJAS)
-// ==========================================
+// ======================================================
+// PERFIL FAMILIA: 1. MERCADO
+// ======================================================
 
-function renderFarmerOrders() {
-  const container = document.getElementById("main-content");
-  const ordersHtml = state.orders.map((order) => {
-    const isPending = order.status === "Pendiente";
-    const itemsHtml = order.items
-      .map((i) => `<li><span>${i.name} (${i.qty})</span><strong>${formatCOP(i.price)}</strong></li>`)
-      .join("");
+function vistaMercado() {
+  const categorias = ["Todas", "Verduras", "Frutas", "Tubérculos", "Hierbas"];
+  const chipsHtml = categorias.map((cat) => `
+    <button class="chip ${estado.categoria === cat ? "active" : ""}" onclick="filtrarCategoria('${cat}')">${cat}</button>
+  `).join("");
+
+  const filtrados = PRODUCTOS.filter((p) => {
+    const coincideCat = estado.categoria === "Todas" || p.categoria === estado.categoria;
+    const coincideTexto = p.nombre.toLowerCase().includes(estado.busqueda.toLowerCase()) ||
+                          p.campesino.toLowerCase().includes(estado.busqueda.toLowerCase());
+    return coincideCat && coincideTexto;
+  });
+
+  const productosHtml = filtrados.map((p) => {
+    const cant = estado.carrito[p.id] || 0;
+    return `
+      <article class="product-card">
+        <div>
+          <div class="product-emoji">${p.emoji}</div>
+          <div class="product-name">${p.nombre}</div>
+          <div class="product-farmer">${p.campesino}</div>
+          <div class="product-price">${formatoCOP(p.precio)} <span class="product-unit">/ ${p.unidad}</span></div>
+        </div>
+        <div class="qty-selector">
+          <button class="qty-btn" onclick="cambiarCantidad(${p.id}, -1)" aria-label="Quitar">−</button>
+          <span class="qty-value">${cant}</span>
+          <button class="qty-btn" onclick="cambiarCantidad(${p.id}, 1)" aria-label="Agregar">+</button>
+        </div>
+      </article>
+    `;
+  }).join("");
+
+  document.getElementById("main-view").innerHTML = `
+    <h1 class="page-title">Mercado fresco</h1>
+    <input class="search-input" type="search" placeholder="Buscar papa, tomate, campesino..."
+      value="${estado.busqueda}" oninput="actualizarBusqueda(this.value)">
+    <div class="chips-row">${chipsHtml}</div>
+    <div class="products-grid">
+      ${productosHtml || `<p style="grid-column:1/-1; color:var(--texto-suave);">No encontramos productos con ese nombre.</p>`}
+    </div>
+  `;
+}
+
+function actualizarBusqueda(texto) {
+  estado.busqueda = texto;
+  vistaMercado();
+}
+
+function filtrarCategoria(cat) {
+  estado.categoria = cat;
+  vistaMercado();
+}
+
+function cambiarCantidad(idProducto, cambio) {
+  const actual = estado.carrito[idProducto] || 0;
+  const nuevo = Math.max(0, actual + cambio);
+  if (nuevo === 0) delete estado.carrito[idProducto];
+  else estado.carrito[idProducto] = nuevo;
+
+  dibujarBarraInferior();
+  dibujarVistaActual();
+}
+
+// ======================================================
+// PERFIL FAMILIA: 2. CARRITO Y PAGO SIMULADO
+// ======================================================
+
+function calcularTotalesCarrito() {
+  let subtotal = 0;
+  for (const [id, cant] of Object.entries(estado.carrito)) {
+    const prod = PRODUCTOS.find((p) => p.id === Number(id));
+    if (prod) subtotal += prod.precio * cant;
+  }
+  const envio = subtotal > 0 ? 15000 : 0;
+  const servicio = Math.round(subtotal * 0.04); // 4% de los productos
+  const total = subtotal + envio + servicio;
+  return { subtotal, envio, servicio, total };
+}
+
+function vistaCarrito() {
+  const items = Object.entries(estado.carrito).map(([id, cant]) => {
+    const prod = PRODUCTOS.find((p) => p.id === Number(id));
+    return { ...prod, cant };
+  });
+
+  const { subtotal, envio, servicio, total } = calcularTotalesCarrito();
+
+  const listaHtml = items.length
+    ? items.map((item) => `
+        <div class="cart-row">
+          <div>
+            <strong>${item.emoji} ${item.nombre}</strong>
+            <div style="font-size:14px; color:var(--texto-suave);">${item.cant} × ${formatoCOP(item.precio)}</div>
+          </div>
+          <strong>${formatoCOP(item.precio * item.cant)}</strong>
+        </div>
+      `).join("")
+    : `<p style="color:var(--texto-suave); text-align:center; padding:16px 0;">Tu carrito está vacío. Agrega productos en Mercado.</p>`;
+
+  document.getElementById("main-view").innerHTML = `
+    <h1 class="page-title">Tu carrito</h1>
+    <div class="card">${listaHtml}</div>
+
+    <div class="summary-card">
+      <div class="sub-title">Resumen claro de tu compra</div>
+      <div class="summary-line"><span>Productos</span><strong>${formatoCOP(subtotal)}</strong></div>
+      <div class="summary-line"><span>Envío</span><strong>${formatoCOP(envio)}</strong></div>
+      <div class="summary-line"><span>Servicio (4%)</span><strong>${formatoCOP(servicio)}</strong></div>
+      <div class="summary-total"><span>Total</span><span>${formatoCOP(total)}</span></div>
+      <button class="btn-primary" ${subtotal === 0 ? "disabled" : ""} onclick="abrirModalPago()">
+        Pagar ${formatoCOP(total)}
+      </button>
+    </div>
+  `;
+}
+
+function abrirModalPago() {
+  const { total } = calcularTotalesCarrito();
+  const metodos = ["Nequi", "Daviplata", "Tarjeta"];
+  const opcionesHtml = metodos.map((m) => `
+    <button class="pay-option ${estado.metodoPago === m ? "selected" : ""}" onclick="elegirMetodoPago('${m}')">
+      <span>${m === "Nequi" ? "📱" : m === "Daviplata" ? "📲" : "💳"} ${m}</span>
+      <span>${estado.metodoPago === m ? "●" : "○"}</span>
+    </button>
+  `).join("");
+
+  abrirModal(`
+    <h2 class="page-title" style="margin-bottom:8px;">Elige cómo pagar</h2>
+    <p style="color:var(--texto-suave); margin-bottom:16px;">Total a pagar: <strong>${formatoCOP(total)}</strong></p>
+    ${opcionesHtml}
+    <button class="btn-primary" onclick="confirmarPagoSimulado()">Confirmar pago con ${estado.metodoPago}</button>
+    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+  `);
+}
+
+function elegirMetodoPago(metodo) {
+  estado.metodoPago = metodo;
+  abrirModalPago();
+}
+
+function confirmarPagoSimulado() {
+  const { subtotal, envio } = calcularTotalesCarrito();
+  const pedidoCompartido = estado.pedidos[0]; // #RJ-1024
+  pedidoCompartido.valorProductos = subtotal;
+  pedidoCompartido.envio = envio;
+
+  abrirModal(`
+    <div style="text-align:center; padding:10px 0;">
+      <div class="success-check">✓</div>
+      <h2 class="page-title" style="margin-bottom:6px;">¡Pago confirmado!</h2>
+      <p style="color:var(--texto-suave); margin-bottom:18px;">
+        Tu pedido <strong>#RJ-1024</strong> ya fue enviado al campesino Hernando Rojas.
+      </p>
+      <button class="btn-primary" onclick="irAMiPedidoDespuesDePago()">Ver mi pedido #RJ-1024</button>
+    </div>
+  `);
+}
+
+function irAMiPedidoDespuesDePago() {
+  cerrarModal();
+  mostrarToast("¡Listo! Pedido confirmado");
+  cambiarPestana("pedido");
+}
+
+// ======================================================
+// PERFIL FAMILIA: 3. MI PEDIDO #RJ-1024
+// ======================================================
+
+function vistaMiPedido() {
+  const pedido = estado.pedidos[0]; // #RJ-1024 compartido
+  const pasos = [
+    { nombre: "Pedido confirmado", desc: "Hernando recibió tu lista de mercado." },
+    { nombre: "Preparando", desc: "Cosechando y empacando tus alimentos frescos." },
+    { nombre: "Enviado por el campesino", desc: "Tu mercado va camino a tu puerta." },
+    { nombre: "Entregado", desc: "Mercado entregado directamente a tu familia." }
+  ];
+
+  const indiceActual = pasos.findIndex((p) => p.nombre === pedido.estado);
+
+  const timelineHtml = pasos.map((p, idx) => `
+    <div class="step ${idx <= indiceActual ? "done" : ""}">
+      <div class="step-dot">${idx <= indiceActual ? "✓" : idx + 1}</div>
+      <div>
+        <strong>${p.nombre}</strong>
+        <p>${p.desc}</p>
+      </div>
+    </div>
+  `).join("");
+
+  let accionFinalHtml = "";
+  if (!pedido.recibidoPorFamilia) {
+    accionFinalHtml = `
+      <button class="btn-primary" onclick="confirmarReciboFamilia()">
+        Confirmar que recibí mi mercado
+      </button>
+    `;
+  } else {
+    const estrellasHtml = [1, 2, 3, 4, 5].map((n) => `
+      <button class="star-btn ${pedido.calificacion >= n ? "active" : ""}" onclick="calificarPedido(${n})">★</button>
+    `).join("");
+
+    accionFinalHtml = `
+      <div class="card" style="text-align:center; border-color:var(--hoja);">
+        <div class="sub-title" style="color:var(--bosque);">¡Gracias por confirmar!</div>
+        <p style="font-size:15px; color:var(--texto-suave);">Califica la frescura y atención de Hernando:</p>
+        <div class="stars-row">${estrellasHtml}</div>
+        ${pedido.calificacion > 0 ? `<p style="font-weight:700; color:var(--bosque);">Calificaste con ${pedido.calificacion} estrellas</p>` : ""}
+      </div>
+    `;
+  }
+
+  document.getElementById("main-view").innerHTML = `
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
+      <h1 class="page-title" style="margin:0;">Mi pedido #${pedido.id}</h1>
+      <span class="badge ${pedido.estado === "Entregado" ? "badge-entregado" : "badge-hoja"}">${pedido.estado}</span>
+    </div>
+
+    <!-- Tarjeta del campesino -->
+    <div class="card" style="display:flex; align-items:center; gap:14px;">
+      <div class="initials-circle initials-earth">HR</div>
+      <div>
+        <div style="font-size:13px; font-weight:700; color:var(--naranja);">TU CAMPESINO</div>
+        <strong style="font-size:18px;">${estado.campesino.nombre}</strong>
+        <div style="font-size:14px; color:var(--texto-suave);">${estado.campesino.vereda}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sub-title">Estado de tu mercado</div>
+      <div class="timeline">${timelineHtml}</div>
+    </div>
+
+    ${accionFinalHtml}
+  `;
+}
+
+function confirmarReciboFamilia() {
+  const pedido = estado.pedidos[0];
+  pedido.estado = "Entregado";
+  pedido.recibidoPorFamilia = true;
+  acreditarSaldoCampesino(pedido);
+  mostrarToast("¡Listo! Mercado recibido");
+  vistaMiPedido();
+}
+
+function calificarPedido(estrellas) {
+  estado.pedidos[0].calificacion = estrellas;
+  mostrarToast("¡Gracias por tu calificación!");
+  vistaMiPedido();
+}
+
+// ======================================================
+// PERFIL CAMPESINO: 1. PEDIDOS
+// ======================================================
+
+function vistaPedidosCampesino() {
+  const tarjetas = estado.pedidos.map((p) => {
+    const totalCampesino = p.valorProductos + p.envio;
+    let botonAccion = "";
+
+    if (!p.aceptado) {
+      botonAccion = `<button class="btn-primary" onclick="aceptarPedidoCampesino('${p.id}')">Aceptar</button>`;
+    } else if (p.estado === "Pedido confirmado") {
+      botonAccion = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Preparando', 'Marcar preparando')">Marcar preparando</button>`;
+    } else if (p.estado === "Preparando") {
+      botonAccion = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Enviado por el campesino', 'Marcar enviado')">Marcar enviado</button>`;
+    } else if (p.estado === "Enviado por el campesino") {
+      botonAccion = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Entregado', 'Marcar entregado')">Marcar entregado</button>`;
+    } else {
+      botonAccion = `<div style="margin-top:12px; font-weight:800; color:var(--bosque);">✓ Pedido completado y sumado a tu saldo</div>`;
+    }
 
     return `
       <article class="card">
-        <div class="stop-header">
-          <div>
-            <strong>Pedido #${order.id}</strong>
-            <div style="font-size:0.84rem; color:var(--muted);">${order.customer}</div>
-          </div>
-          <span class="status-pill ${getStatusClass(order.status)}">${order.status}</span>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <strong style="font-size:18px;">Pedido #${p.id}</strong>
+          <span class="badge ${p.estado === "Entregado" ? "badge-entregado" : "badge-naranja"}">${p.estado}</span>
         </div>
-
-        <ul class="item-list">${itemsHtml}</ul>
-
-        <div class="price-row">
-          <span style="font-size:0.86rem; color:var(--muted);">Valor para ti:</span>
-          <span class="price-big">${formatCOP(order.total)}</span>
+        <p style="font-weight:700;">${p.familia}</p>
+        <p style="font-size:15px; color:var(--texto-suave); margin:4px 0;">${p.productosTexto}</p>
+        <p style="font-size:14px; color:var(--tierra); margin-bottom:10px;">📍 ${p.direccion}</p>
+        <div style="display:flex; justify-content:space-between; border-top:1px solid var(--borde); padding-top:10px;">
+          <span style="color:var(--texto-suave);">Recibes (productos + envío)</span>
+          <strong style="font-size:19px; color:var(--bosque);">${formatoCOP(totalCampesino)}</strong>
         </div>
-
-        ${
-          isPending
-            ? `<button class="btn btn-primary" onclick="acceptFarmerOrder('${order.id}')">✓ Aceptar pedido</button>`
-            : `<button class="btn btn-earth" onclick="openFarmerOrderDetail('${order.id}')">Ver detalle y recogida ›</button>`
-        }
+        ${botonAccion}
       </article>
     `;
   }).join("");
 
-  container.innerHTML = `
-    <div class="section-title">
-      <span>Pedidos entrantes (${state.orders.length})</span>
-      <span style="font-size:0.78rem; color:var(--green-main);">Finca El Mirador</span>
-    </div>
-    ${ordersHtml}
+  document.getElementById("main-view").innerHTML = `
+    <h1 class="page-title">Pedidos entrantes</h1>
+    ${tarjetas}
   `;
 }
 
-function acceptFarmerOrder(orderId) {
-  const order = state.orders.find((o) => o.id === orderId);
-  if (!order) return;
-
-  order.status = "Pedido confirmado";
-  syncOrderStatusToDriver(orderId, "Pedido confirmado");
-  showToast(`Pedido #${orderId} confirmado. Ya puedes alistarlo.`);
-  openFarmerOrderDetail(orderId);
+function aceptarPedidoCampesino(idPedido) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
+  pedido.aceptado = true;
+  mostrarToast("¡Listo! Pedido aceptado");
+  vistaPedidosCampesino();
 }
 
-function openFarmerOrderDetail(orderId) {
-  state.selectedOrderId = orderId;
-  state.activeTab = "detail";
-  renderCurrentView();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function renderFarmerOrderDetail() {
-  const container = document.getElementById("main-content");
-  const order = state.orders.find((o) => o.id === state.selectedOrderId);
-  if (!order) return renderFarmerOrders();
-
-  const itemsHtml = order.items
-    .map((i) => `<li><span>${i.name} · ${i.qty}</span><strong>${formatCOP(i.price)}</strong></li>`)
-    .join("");
-
-  const canMarkSent = order.status === "Pedido confirmado";
-
-  container.innerHTML = `
-    <button class="back-link" onclick="switchTab('orders')">← Volver a pedidos</button>
-
-    <div class="card">
-      <div class="stop-header">
-        <div>
-          <h3>Pedido #${order.id}</h3>
-          <p style="font-size:0.84rem; color:var(--muted);">${order.customer}</p>
-        </div>
-        <span class="status-pill ${getStatusClass(order.status)}">${order.status}</span>
-      </div>
-
-      <ul class="item-list">${itemsHtml}</ul>
-
-      <div class="price-row">
-        <strong>Total cosecha</strong>
-        <span class="price-big">${formatCOP(order.total)}</span>
-      </div>
+function abrirFotoPaso(idPedido, nuevoEstado, textoBoton) {
+  abrirModal(`
+    <h2 class="page-title" style="margin-bottom:6px;">${textoBoton}</h2>
+    <p style="color:var(--texto-suave);">Toma una foto rápida de respaldo para la familia (simulada).</p>
+    <div class="photo-box">
+      <div style="font-size:48px;">📸🧺🥕</div>
+      <strong style="display:block; margin-top:8px;">Foto lista · Pedido #${idPedido}</strong>
+      <span style="font-size:14px; color:var(--texto-suave);">Se actualizará a: ${nuevoEstado}</span>
     </div>
-
-    <div class="card">
-      <h3 style="font-size:1rem; color:var(--earth-dark);">Transportista asignado</h3>
-      <div class="driver-box">
-        <div class="driver-photo">${DRIVER_PHOTO_SVG}</div>
-        <div>
-          <strong style="font-size:1.02rem;">${state.driver.name}</strong>
-          <div style="font-size:0.86rem; color:var(--earth-dark); margin-top:2px;">
-            🛻 ${state.driver.vehicle}
-          </div>
-          <span class="plate-tag">${state.driver.plate}</span>
-          <div style="font-size:0.82rem; color:var(--muted); margin-top:6px;">
-            🕒 Hora estimada de recogida: <strong>${state.driver.eta}</strong>
-          </div>
-        </div>
-      </div>
-
-      ${
-        canMarkSent
-          ? `<button class="btn btn-primary" onclick="openFarmerPhotoModal('${order.id}')">
-               📸 Marcar mercado enviado
-             </button>`
-          : `<div class="responsibility-banner" style="margin-top:12px; margin-bottom:0;">
-               ✓ Estado actual: <strong>${order.status}</strong>
-               ${order.photoSent ? " · Foto de canastilla registrada." : ""}
-             </div>`
-      }
-    </div>
-  `;
-}
-
-function openFarmerPhotoModal(orderId) {
-  openModal(`
-    <h3 style="color:var(--earth-dark);">Confirmar despacho del mercado</h3>
-    <p style="font-size:0.88rem; color:var(--muted); margin-top:6px;">
-      Foto simulada de las canastillas listas para entregar a ${state.driver.name}.
-    </p>
-    <div class="photo-preview">
-      <div style="font-size:3rem;">🧺🥔🍓🥕</div>
-      <strong style="display:block; margin-top:8px; color:var(--green-dark);">Foto capturada · Pedido #${orderId}</strong>
-      <span style="font-size:0.8rem; color:var(--muted);">Finca El Mirador, Sibaté · Verificada</span>
-    </div>
-    <button class="btn btn-primary" onclick="confirmFarmerSent('${orderId}')">
-      ✓ Confirmar "Mercado enviado"
-    </button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    <button class="btn-primary" onclick="confirmarPasoCampesino('${idPedido}', '${nuevoEstado}')">Confirmar</button>
+    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
 
-function confirmFarmerSent(orderId) {
-  const order = state.orders.find((o) => o.id === orderId);
-  if (!order) return;
+function confirmarPasoCampesino(idPedido, nuevoEstado) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
 
-  order.status = "Enviado por el campesino";
-  order.photoSent = true;
-  syncOrderStatusToDriver(orderId, "Enviado por el campesino");
-
-  closeModal();
-  showToast(`Pedido #${orderId} marcado como Enviado por el campesino.`);
-  renderFarmerOrderDetail();
-}
-
-// ==========================================
-// VISTAS DEL TRANSPORTISTA (CARLOS PÉREZ)
-// ==========================================
-
-function renderDriverRoute() {
-  const container = document.getElementById("main-content");
-  const route = state.route;
-
-  // Caso 1: Ruta rechazada
-  if (route.status === "rejected") {
-    container.innerHTML = `
-      <div class="card" style="text-align:center; padding:28px 18px;">
-        <div style="font-size:2.8rem; margin-bottom:10px;">🛣️</div>
-        <h3>Ruta rechazada</h3>
-        <p style="font-size:0.9rem; color:var(--muted); margin-top:8px;">
-          No tienes rutas activas en este momento. Cuando haya una nueva ruta rural disponible aparecerá aquí.
-        </p>
-        <button class="btn btn-primary" onclick="restoreRouteDemo()">
-          🔄 Simular nueva ruta asignada
-        </button>
-      </div>
-    `;
-    return;
+  pedido.estado = nuevoEstado;
+  if (nuevoEstado === "Entregado") {
+    acreditarSaldoCampesino(pedido);
   }
 
-  // Caso 2: Ruta asignada pendiente de aceptar/rechazar
-  if (route.status === "assigned") {
-    container.innerHTML = `
-      <div class="section-title"><span>Ruta asignada hoy</span></div>
-
-      <div class="card card-earth">
-        <span class="status-pill" style="background:rgba(255,255,255,0.2); color:#fff;">
-          ● Nueva ruta #${route.id}
-        </span>
-        <div class="balance-amount">${formatCOP(route.totalPay)}</div>
-        <p style="font-size:0.88rem; opacity:0.9;">Remuneración total por completar la ruta</p>
-      </div>
-
-      <div class="card">
-        <h3 style="font-size:1rem; margin-bottom:10px; color:var(--earth-dark);">Resumen de la ruta</h3>
-        <ul class="item-list">
-          <li><span>🌾 Fincas de recogida</span><strong>${route.farmsCount} finca (Sibaté)</strong></li>
-          <li><span>🏠 Hogares de entrega</span><strong>${route.homesCount} hogares (Bogotá)</strong></li>
-          <li><span>💵 Pago por entrega</span><strong>${formatCOP(route.payPerDelivery)} c/u</strong></li>
-          <li><span>🛻 Vehículo</span><strong>${state.driver.vehicle} (${state.driver.plate})</strong></li>
-        </ul>
-
-        <div class="btn-row">
-          <button class="btn btn-danger-outline" onclick="rejectRoute()">✕ Rechazar</button>
-          <button class="btn btn-primary" onclick="acceptRoute()">✓ Aceptar ruta</button>
-        </div>
-      </div>
-    `;
-    return;
-  }
-
-  // Caso 3: Ruta aceptada -> Lista ordenada de paradas
-  const deliveredCount = route.deliveries.filter((d) => d.status === "Entregado").length;
-
-  const deliveriesHtml = route.deliveries.map((stop) => {
-    const isDelivered = stop.status === "Entregado";
-    const canDeliver = route.pickedUp && !isDelivered;
-
-    return `
-      <article class="card stop-card ${isDelivered ? "stop-done" : ""}">
-        <div class="stop-header">
-          <div>
-            <div class="stop-number">Parada ${stop.stopNumber + 1} · Entrega hogar #${stop.orderId}</div>
-            <strong>${stop.family}</strong>
-          </div>
-          <span class="status-pill ${getStatusClass(stop.status)}">${stop.status}</span>
-        </div>
-
-        <p class="address-text">📍 ${stop.address}</p>
-
-        <div class="price-row">
-          <span style="font-size:0.82rem; color:var(--muted);">Remuneración entrega:</span>
-          <strong style="color:var(--green-main);">${formatCOP(stop.pay)}</strong>
-        </div>
-
-        ${
-          isDelivered
-            ? `<div style="margin-top:10px; font-size:0.84rem; font-weight:700; color:var(--green-main);">
-                 ✓ Entregado · Comprobante ${stop.receiptCode} guardado
-               </div>`
-            : `<button class="btn btn-primary" ${canDeliver ? "" : "disabled"} onclick="openDeliveryModal('${stop.orderId}')">
-                 ${canDeliver ? "📦 Entregar con foto y comprobante" : "🔒 Primero confirma la recogida en finca"}
-               </button>`
-        }
-      </article>
-    `;
-  }).join("");
-
-  container.innerHTML = `
-    <div class="section-title">
-      <span>Paradas de la ruta</span>
-      <span style="font-size:0.82rem; color:var(--green-main);">${deliveredCount}/${route.homesCount} entregadas</span>
-    </div>
-
-    ${
-      route.pickedUp
-        ? `<div class="responsibility-banner">
-             🛡️ Carga recogida: la responsabilidad del mercado está ahora en manos del transportista (${state.driver.name}).
-           </div>`
-        : ""
-    }
-
-    <!-- PARADA 1: FINCA DE RECOGIDA -->
-    <article class="card stop-card stop-farm ${route.pickedUp ? "stop-done" : ""}">
-      <div class="stop-header">
-        <div>
-          <div class="stop-number">Parada 1 · Recogida en finca</div>
-          <strong>${route.farmStop.farm}</strong>
-        </div>
-        <span class="status-pill ${route.pickedUp ? "st-recogido" : "st-enviado"}">
-          ${route.pickedUp ? "Recogido" : "Por recoger"}
-        </span>
-      </div>
-      <p class="address-text">🌾 ${route.farmStop.address}</p>
-      <p style="font-size:0.84rem; color:var(--earth-dark);">📦 ${route.farmStop.packages}</p>
-
-      ${
-        !route.pickedUp
-          ? `<button class="btn btn-earth" onclick="openPickupModal()">
-               📸 Confirmar recogida con foto
-             </button>`
-          : `<div style="margin-top:10px; font-size:0.84rem; font-weight:700; color:var(--earth-dark);">
-               ✓ Recogida verificada con foto en finca
-             </div>`
-      }
-    </article>
-
-    ${deliveriesHtml}
-  `;
+  cerrarModal();
+  mostrarToast("¡Listo! Estado actualizado");
+  vistaPedidosCampesino();
 }
 
-function acceptRoute() {
-  state.route.status = "accepted";
-  showToast("Ruta aceptada. Dirígete a la finca de Hernando Rojas.");
-  renderDriverRoute();
-}
-
-function rejectRoute() {
-  state.route.status = "rejected";
-  showToast("Has rechazado la ruta asignada.");
-  renderDriverRoute();
-}
-
-function restoreRouteDemo() {
-  state.route.status = "assigned";
-  renderDriverRoute();
-}
-
-function openPickupModal() {
-  openModal(`
-    <h3 style="color:var(--earth-dark);">Confirmar recogida en finca</h3>
-    <p style="font-size:0.88rem; color:var(--muted); margin-top:6px;">
-      Al confirmar con foto, recibes las canastillas de Hernando Rojas y la responsabilidad del pedido pasa a ti.
-    </p>
-    <div class="photo-preview">
-      <div style="font-size:3rem;">🛻🧺✅</div>
-      <strong style="display:block; margin-top:8px; color:var(--earth-dark);">Foto simulada de carga en pickup</strong>
-      <span style="font-size:0.8rem; color:var(--muted);">Placa ${state.driver.plate} · Finca El Mirador, Sibaté</span>
-    </div>
-    <button class="btn btn-earth" onclick="confirmPickup()">
-      ✓ Confirmar recogida y salir en camino
-    </button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-  `);
-}
-
-function confirmPickup() {
-  state.route.pickedUp = true;
-
-  // Actualiza estados de forma coherente a "Recogido" -> "En camino"
-  state.route.deliveries.forEach((d) => {
-    if (d.status !== "Entregado") {
-      d.status = "En camino";
-    }
+function acreditarSaldoCampesino(pedido) {
+  if (pedido.saldoAcreditado) return;
+  const pago = pedido.valorProductos + pedido.envio;
+  estado.campesino.saldo += pago;
+  estado.campesino.historial.unshift({
+    titulo: `Pedido #${pedido.id} entregado`,
+    fecha: "Ahora mismo · Productos + envío",
+    monto: pago
   });
-
-  state.orders.forEach((o) => {
-    if (o.status !== "Entregado") {
-      o.status = "En camino";
-    }
-  });
-
-  closeModal();
-  showToast("Recogida confirmada. Pedidos ahora En camino.");
-  renderDriverRoute();
+  pedido.saldoAcreditado = true;
 }
 
-function openDeliveryModal(orderId) {
-  const stop = state.route.deliveries.find((d) => d.orderId === orderId);
-  if (!stop) return;
+// ======================================================
+// PERFIL CAMPESINO: 2. MI SALDO
+// ======================================================
 
-  openModal(`
-    <h3 style="color:var(--green-dark);">Entregar a ${stop.family}</h3>
-    <p style="font-size:0.86rem; color:var(--muted); margin-top:4px;">${stop.address}</p>
-
-    <div class="photo-preview">
-      <div style="font-size:2.8rem;">🚪🧺📸</div>
-      <strong style="display:block; margin-top:6px; color:var(--green-dark);">Foto de entrega en puerta (simulada)</strong>
-
-      <div class="receipt-box">
-        <strong>🧾 Comprobante digital ${stop.receiptCode}</strong><br>
-        Pedido: #${stop.orderId}<br>
-        Recibe: ${stop.family}<br>
-        Abono inmediato a tu saldo: <strong style="color:var(--green-main);">${formatCOP(stop.pay)}</strong>
+function vistaSaldoCampesino() {
+  const historialHtml = estado.campesino.historial.map((h) => `
+    <div class="cart-row">
+      <div>
+        <strong>${h.titulo}</strong>
+        <div style="font-size:13px; color:var(--texto-suave);">${h.fecha}</div>
       </div>
+      <strong style="color:${h.monto >= 0 ? "var(--bosque)" : "var(--tierra)"};">
+        ${h.monto >= 0 ? "+" : ""}${formatoCOP(h.monto)}
+      </strong>
     </div>
+  `).join("");
 
-    <button class="btn btn-primary" onclick="confirmDelivery('${stop.orderId}')">
-      ✓ Confirmar entrega y sumar ${formatCOP(stop.pay)}
-    </button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-  `);
-}
+  document.getElementById("main-view").innerHTML = `
+    <h1 class="page-title">Mi saldo</h1>
 
-function confirmDelivery(orderId) {
-  const stop = state.route.deliveries.find((d) => d.orderId === orderId);
-  if (!stop || stop.status === "Entregado") return;
-
-  stop.status = "Entregado";
-
-  // Sincronizar con pedidos del campesino si corresponde
-  const farmerOrder = state.orders.find((o) => o.id === orderId);
-  if (farmerOrder) {
-    farmerOrder.status = "Entregado";
-  }
-
-  // Sumar al saldo del transportista al instante
-  state.driver.balance += stop.pay;
-  state.driver.history.unshift({
-    id: `DT-${Date.now()}`,
-    title: `Entrega #${stop.orderId} (${stop.family})`,
-    date: "Ahora mismo",
-    amount: stop.pay,
-    type: "in"
-  });
-
-  closeModal();
-  showToast(`¡Entregado! +${formatCOP(stop.pay)} sumados a tu saldo.`);
-  renderDriverRoute();
-}
-
-function syncOrderStatusToDriver(orderId, newStatus) {
-  const stop = state.route.deliveries.find((d) => d.orderId === orderId);
-  if (stop && stop.status !== "Entregado" && !state.route.pickedUp) {
-    stop.status = newStatus;
-  }
-}
-
-// ==========================================
-// MI SALDO (CAMPESINO Y TRANSPORTISTA)
-// ==========================================
-
-function renderWallet(role) {
-  const container = document.getElementById("main-content");
-  const user = role === "farmer" ? state.farmer : state.driver;
-  const cardStyle = role === "farmer" ? "card-highlight" : "card-earth";
-
-  const historyHtml = user.history
-    .map(
-      (tx) => `
-      <div class="tx-item">
-        <div>
-          <div class="tx-title">${tx.title}</div>
-          <div class="tx-date">${tx.date}</div>
-        </div>
-        <div class="${tx.amount >= 0 ? "tx-plus" : "tx-minus"}">
-          ${tx.amount >= 0 ? "+" : ""}${formatCOP(tx.amount)}
-        </div>
-      </div>
-    `
-    )
-    .join("");
-
-  container.innerHTML = `
-    <div class="section-title"><span>Mi saldo</span></div>
-
-    <div class="card ${cardStyle}">
-      <span style="font-size:0.86rem; opacity:0.9;">Saldo disponible</span>
-      <div class="balance-amount">${formatCOP(user.balance)}</div>
-      <p style="font-size:0.8rem; opacity:0.85;">Cuenta registrada: ${user.bankAccount}</p>
-
-      <button class="btn" style="background:#ffffff; color:var(--green-dark); margin-top:16px;"
-        ${user.balance <= 0 ? "disabled" : ""}
-        onclick="openWithdrawModal('${role}')">
-        🏦 Retirar a mi cuenta bancaria
+    <div class="balance-card">
+      <span style="font-size:15px; opacity:0.9;">Saldo disponible</span>
+      <div class="balance-number">${formatoCOP(estado.campesino.saldo)}</div>
+      <p style="font-size:14px; opacity:0.9;">Cuenta: ${estado.campesino.cuenta}</p>
+      <button class="btn-primary" style="background:var(--blanco); color:var(--bosque);"
+        ${estado.campesino.saldo <= 0 ? "disabled" : ""} onclick="abrirModalRetiro()">
+        Retirar a mi cuenta bancaria
       </button>
     </div>
 
+    <div class="info-note">
+      <strong>Pago justo y claro:</strong> recibes el <strong>100% del valor de tus productos más el envío</strong>. El saldo aparece aquí apenas el pedido queda entregado.
+    </div>
+
     <div class="card">
-      <h3 style="font-size:1rem; color:var(--earth-dark); margin-bottom:6px;">Historial de pagos</h3>
-      ${historyHtml}
+      <div class="sub-title">Historial de pagos</div>
+      ${historialHtml}
     </div>
   `;
 }
 
-function openWithdrawModal(role) {
-  const user = role === "farmer" ? state.farmer : state.driver;
-  openModal(`
-    <h3 style="color:var(--earth-dark);">Retirar saldo</h3>
-    <p style="font-size:0.9rem; color:var(--muted); margin-top:6px;">
-      Transferiremos tu saldo disponible a tu cuenta bancaria registrada.
+function abrirModalRetiro() {
+  abrirModal(`
+    <h2 class="page-title" style="margin-bottom:8px;">Confirmar retiro</h2>
+    <p style="color:var(--texto-suave); margin-bottom:14px;">
+      Enviaremos <strong>${formatoCOP(estado.campesino.saldo)}</strong> a tu cuenta <strong>${estado.campesino.cuenta}</strong>.
     </p>
-    <div class="receipt-box" style="margin:14px 0;">
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>Titular:</span><strong>${user.name}</strong>
-      </div>
-      <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-        <span>Destino:</span><strong>${user.bankAccount}</strong>
-      </div>
-      <div style="display:flex; justify-content:space-between; font-size:1.05rem;">
-        <span>Monto a retirar:</span><strong style="color:var(--green-main);">${formatCOP(user.balance)}</strong>
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="confirmWithdraw('${role}')">
-      ✓ Confirmar retiro ahora
-    </button>
-    <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    <button class="btn-primary" onclick="confirmarRetiro()">Sí, retirar ahora</button>
+    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
 
-function confirmWithdraw(role) {
-  const user = role === "farmer" ? state.farmer : state.driver;
-  const amount = user.balance;
-  if (amount <= 0) return;
+function confirmarRetiro() {
+  const monto = estado.campesino.saldo;
+  if (monto <= 0) return;
 
-  user.balance = 0;
-  user.history.unshift({
-    id: `WD-${Date.now()}`,
-    title: `Retiro a ${user.bankAccount}`,
-    date: "Ahora mismo",
-    amount: -amount,
-    type: "out"
+  estado.campesino.saldo = 0;
+  estado.campesino.historial.unshift({
+    titulo: "Retiro a cuenta bancaria",
+    fecha: "Ahora mismo",
+    monto: -monto
   });
 
-  closeModal();
-  showToast(`Retiro por ${formatCOP(amount)} enviado a tu cuenta bancaria.`);
-  renderWallet(role);
+  cerrarModal();
+  mostrarToast("¡Listo! Retiro enviado");
+  vistaSaldoCampesino();
 }
 
-// ==========================================
-// CONTROL DE MODALES
-// ==========================================
+// ======================================================
+// PERFIL CAMPESINO: 3. APRENDER
+// ======================================================
 
-function openModal(html) {
-  document.getElementById("modal-body").innerHTML = html;
+function vistaAprender() {
+  const cardsHtml = VIDEOS_APRENDER.map((v) => `
+    <article class="card video-card" onclick="abrirVideo(${v.id})">
+      <div class="play-circle">▶</div>
+      <div>
+        <span class="badge badge-hoja" style="margin-bottom:4px;">Video gratis · ${v.duracion}</span>
+        <strong style="display:block; font-size:17px;">${v.titulo}</strong>
+      </div>
+    </article>
+  `).join("");
+
+  document.getElementById("main-view").innerHTML = `
+    <h1 class="page-title">Aprender</h1>
+    <p style="color:var(--texto-suave); margin-bottom:16px;">
+      Videos cortos y gratuitos para fortalecer tu finca y tus ganancias.
+    </p>
+    ${cardsHtml}
+  `;
+}
+
+function abrirVideo(idVideo) {
+  const v = VIDEOS_APRENDER.find((item) => item.id === idVideo);
+  if (!v) return;
+  abrirModal(`
+    <span class="badge badge-hoja">Video gratis · ${v.duracion}</span>
+    <h2 class="page-title" style="margin:10px 0 8px;">${v.titulo}</h2>
+    <div class="photo-box" style="background:var(--bosque); color:var(--blanco); border:none;">
+      <div style="font-size:44px;">🎬</div>
+      <strong style="display:block; margin-top:6px;">Reproduciendo clase simulada</strong>
+    </div>
+    <p style="font-size:16px; color:var(--texto); margin-bottom:12px;">${v.resumen}</p>
+    <button class="btn-primary" onclick="cerrarModal()">Entendido</button>
+  `);
+}
+
+// ======================================================
+// CONTROL DE MODALES
+// ======================================================
+
+function abrirModal(html) {
+  document.getElementById("modal-content").innerHTML = html;
   document.getElementById("modal-overlay").classList.remove("hidden");
 }
 
-function closeModal() {
+function cerrarModal() {
   document.getElementById("modal-overlay").classList.add("hidden");
 }
 
-function closeModalOnBackdrop(event) {
-  if (event.target.id === "modal-overlay") {
-    closeModal();
-  }
+function cerrarModalFondo(event) {
+  if (event.target.id === "modal-overlay") cerrarModal();
 }
