@@ -1,5 +1,5 @@
-// Service Worker de Raíz Justa (v4 - Finca viva y datos reales)
-const CACHE_NAME = "raiz-justa-v4";
+// Service Worker de Raíz Justa (v5 - Modelo de tiendas por campesino)
+const CACHE_NAME = "raiz-justa-v5";
 const ARCHIVOS = [
   "./",
   "./index.html",
