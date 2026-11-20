@@ -1174,11 +1174,11 @@ function vistaPedidosCampesino() {
           <button class="btn-primary" onclick="aceptarPedido('${p.id}')">Aceptar</button>
         </div>`;
     } else if (p.estado === "Aceptado") {
-      botones = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Preparando', 'Marcar preparando')">Marcar preparando</button>`;
+      botones = `<button class="btn-primary" onclick="confirmarPasoCampesino('${p.id}', 'Preparando')">Marcar preparando</button>`;
     } else if (p.estado === "Preparando") {
-      botones = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Enviado', 'Marcar enviado')">Marcar enviado</button>`;
+      botones = `<button class="btn-primary" onclick="abrirFotoEnvio('${p.id}')">Marcar enviado (con foto)</button>`;
     } else if (p.estado === "Enviado") {
-      botones = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Entregado', 'Marcar entregado')">Marcar entregado</button>`;
+      botones = `<button class="btn-primary" onclick="confirmarPasoCampesino('${p.id}', 'Entregado')">Marcar entregado</button>`;
     } else if (p.estado === "Entregado") {
       botones = `<div style="margin-top:12px; font-weight:800; color:var(--bosque);">✓ Entregado y sumado a tu saldo</div>`;
     } else {
@@ -1276,18 +1276,19 @@ function confirmarRechazo(id) {
   vistaPedidosCampesino();
 }
 
-function abrirFotoPaso(id, nuevoEstado, textoBoton) {
+function abrirFotoEnvio(id) {
   abrirModal(`
-    <h2 class="section-title" style="margin-bottom:6px;">${textoBoton}</h2>
-    <p style="color:var(--texto-suave);">Foto rápida de respaldo para la familia (simulada).</p>
+    <h2 class="section-title" style="margin-bottom:6px;">Evidencia de entrega al transportista</h2>
+    <p style="color:var(--texto-suave);">Sube la foto del mercado empacado junto con el recibo entregado al transportista (simulada).</p>
     <div class="photo-box">
-      <div style="font-size:48px;">📸🧺🥕</div>
-      <strong style="display:block; margin-top:8px;">Foto lista · Pedido #${id}</strong>
-      <span style="font-size:14px; color:var(--texto-suave);">Pasará a: ${nuevoEstado}</span>
+      <div style="font-size:48px;">📸🧺🧾</div>
+      <strong style="display:block; margin-top:8px;">Foto de mercado y recibo · Pedido #${id}</strong>
+      <span style="font-size:14px; color:var(--texto-suave);">Desde este punto el envío queda a cargo del transportista.</span>
     </div>
-    <button class="btn-primary" onclick="confirmarPasoCampesino('${id}', '${nuevoEstado}')">Confirmar</button>
+    <button class="btn-primary" onclick="confirmarPasoCampesino('${id}', 'Enviado')">Confirmar envío</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
+}
 }
 
 function confirmarPasoCampesino(id, nuevoEstado) {
