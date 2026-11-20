@@ -1,17 +1,9 @@
 // ======================================================
-// DATOS COMPARTIDOS Y ESTADO DE RAÍZ JUSTA (SIN SERVIDOR)
+// RAÍZ JUSTA - LÓGICA COMPLETA CON DATOS REALES (LOCALSTORAGE)
 // Requiere cargar productos.js antes de este archivo
 // ======================================================
 
-const VENTAS_7_DIAS = [
-  { dia: "Lun", monto: 65000 },
-  { dia: "Mar", monto: 92000 },
-  { dia: "Mié", monto: 78000 },
-  { dia: "Jue", monto: 118000 },
-  { dia: "Vie", monto: 127000 },
-  { dia: "Sáb", monto: 164000 },
-  { dia: "Hoy", monto: 135000 }
-];
+const STORAGE_KEY = "raiz_justa_estado_v4";
 
 const VIDEOS_APRENDER = [
   { id: 1, titulo: "Cómo calcular lo que te cuesta producir", duracion: "4 min", color: "#2F6B3A", emoji: "🧮", resumen: "Suma semillas, abono, empaque y tu jornal diario para saber exactamente desde qué precio ganas." },
@@ -19,80 +11,63 @@ const VIDEOS_APRENDER = [
   { id: 3, titulo: "Cómo negociar y no dejarte estafar", duracion: "6 min", color: "#D9822B", emoji: "🤝", resumen: "Claves prácticas para pactar cantidades, fechas y pagos directos con total tranquilidad." }
 ];
 
-// Estado global compartido entre Perfil Familia y Perfil Campesino
-const estado = {
-  perfil: null,         // "familia" | "campesino"
-  pestana: "mercado",   // familia: mercado, carrito, pedido | campesino: pedidos, productos, saldo, aprender
-  busqueda: "",
-  categoria: "Todas",
-  metodoPago: "Nequi",
+const MOTIVOS_RECHAZO = [
+  "No tengo todos los productos",
+  "Sin disponibilidad esta semana",
+  "Queda muy lejos de mi ruta",
+  "Otro"
+];
 
-  // Carrito inicial con algunos productos reales (se puede editar o cargar un Mercado Armado)
-  carrito: { 79: 2, 91: 2, 3: 2, 94: 3, 65: 3, 7: 2, 16: 3 },
-
-  // Pedidos del campesino (#RJ-1024 se comparte en vivo con el perfil Familia)
-  pedidos: [
-    {
-      id: "RJ-1024",
-      familia: "Familia Morales",
-      direccion: "Cra 68 # 24B-15, Apto 402 · Bogotá",
-      listaAlistamiento: [
-        "2 lb Papa Pastusa",
-        "2 lb Tomate de Guiso",
-        "2 lb Aguacate Hass",
-        "3 lb Zanahoria",
-        "3 lb Cebolla Larga",
-        "2 lb Banano Urabá",
-        "3 unidades Granadilla"
-      ],
-      valorProductos: 24500,
-      envio: 15000,
-      estado: "Pedido confirmado", // Pedido confirmado -> Preparando -> Enviado por el campesino -> Entregado
-      aceptado: false,
-      recibidoPorFamilia: false,
-      calificacion: 0,
-      saldoAcreditado: false
-    },
-    {
-      id: "RJ-1025",
-      familia: "Familia Castro",
-      direccion: "Calle 127 # 18-40, Casa 6 · Bogotá",
-      listaAlistamiento: [
-        "3 lb Papa Sabanera",
-        "2 lb Fresa Pareja",
-        "1 unidad Lechuga hidroponica Verde",
-        "1 lb Cilantro"
-      ],
-      valorProductos: 13650,
-      envio: 15000,
-      estado: "Pedido confirmado",
-      aceptado: false,
-      recibidoPorFamilia: false,
-      calificacion: 0,
-      saldoAcreditado: false
-    }
-  ],
-
-  campesino: {
-    nombre: "Hernando Rojas",
-    vereda: "Vereda San Miguel, Sibaté",
-    historia: "Lleva 22 años cultivando papa, hortalizas y frutos de altura junto a su familia en tierra fría.",
-    frase: "“Cuando vendemos directo, la comida llega recién cortada y a nuestra finca sí le queda el fruto del trabajo.”",
-    saldo: 245000,
-    ventasSemana: 779000,
-    cuenta: "Bancolombia Ahorros •••• 4821",
-    historial: [
-      { titulo: "Pedido #RJ-1019 entregado", fecha: "Ayer · Productos + envío", monto: 118000, tipo: "in" },
-      { titulo: "Pedido #RJ-1015 entregado", fecha: "17 Nov · Productos + envío", monto: 127000, tipo: "in" },
-      { titulo: "Retiro a Bancolombia", fecha: "14 Nov · Transferencia", monto: -180000, tipo: "out" }
-    ]
-  }
+const INFO_CAMPESINOS = {
+  "Hernando Rojas": { iniciales: "HR", zona: "Sibaté", cuenta: "Bancolombia Ahorros •••• 4821", historia: "Lleva 22 años cultivando papa, hortalizas y frutos de altura en tierra fría." },
+  "Marleny Cortés": { iniciales: "MC", zona: "Fusagasugá", cuenta: "Nequi •••• 3190", historia: "Productora familiar de frutas de clima templado y plátano recién cortado." },
+  "Gonzalo Pineda": { iniciales: "GP", zona: "Silvania", cuenta: "Daviplata •••• 7742", historia: "Cultiva aguacate, cítricos y verduras frescas en su finca familiar." },
+  "Rosalba Duarte": { iniciales: "RD", zona: "Granada", cuenta: "Banco Agrario •••• 5518", historia: "Especialista en hortalizas limpias, lechugas y aromáticas de huerta." }
 };
 
+// Estado inicial 100% en cero (sin pedidos, ventas ni saldos de ejemplo)
+function crearEstadoInicial() {
+  return {
+    perfil: null,                 // "familia" | "campesino"
+    pestana: "mercado",           // familia: mercado, carrito, pedido | campesino: pedidos, productos, saldo, aprender
+    campesinoActivo: "Hernando Rojas",
+    busqueda: "",
+    categoria: "Todas",
+    metodoPago: "Nequi",
+    consecutivoPedido: 1001,      // #RJ-1001, #RJ-1002...
+    carrito: {},                  // Vacío al iniciar
+    pedidos: [],                  // Pedidos reales creados por la familia
+    retiros: [],                  // Retiros reales hechos por campesinos: { campesino, monto, fecha }
+    mostrarRechazados: false,
+    barraSeleccionada: null       // Índice del día tocado en la gráfica
+  };
+}
+
+let estado = cargarEstado();
 let timerBusqueda = null;
+let motivoSeleccionado = MOTIVOS_RECHAZO[0];
+
+function cargarEstado() {
+  try {
+    const guardado = localStorage.getItem(STORAGE_KEY);
+    if (!guardado) return crearEstadoInicial();
+    const parsed = JSON.parse(guardado);
+    return { ...crearEstadoInicial(), ...parsed };
+  } catch (e) {
+    return crearEstadoInicial();
+  }
+}
+
+function guardarEstado() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(estado));
+  } catch (e) {
+    // Si localStorage no está disponible, continúa funcionando en memoria
+  }
+}
 
 // ======================================================
-// UTILIDADES DE FORMATO, UNIDADES Y BÚSQUEDA
+// UTILIDADES DE FORMATO, FECHAS Y UNIDADES
 // ======================================================
 
 function formatoCOP(valor) {
@@ -100,7 +75,6 @@ function formatoCOP(valor) {
   return signo + "$" + Math.abs(Math.round(valor)).toLocaleString("es-CO");
 }
 
-// Quita tildes y pasa a minúsculas para buscar sin errores
 function normalizarTexto(texto) {
   return String(texto || "")
     .normalize("NFD")
@@ -109,7 +83,14 @@ function normalizarTexto(texto) {
     .trim();
 }
 
-// Formatea la cantidad junto a su unidad (ej: "2 lb", "½ lb", "3 unidades", "1 kg")
+function claveFechaLocal(fecha = new Date()) {
+  const d = new Date(fecha);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 function formatearCantidadUnidad(prod, cant) {
   const numTxt = cant === 0.5 ? "½" : String(cant).replace(".5", " ½");
   if (prod.tipoUnidad === "libra") return `${numTxt} lb`;
@@ -126,10 +107,9 @@ function mostrarToast(texto = "¡Listo!") {
   el.textContent = texto;
   el.classList.remove("hidden");
   clearTimeout(window._timerToast);
-  window._timerToast = setTimeout(() => el.classList.add("hidden"), 2400);
+  window._timerToast = setTimeout(() => el.classList.add("hidden"), 2500);
 }
 
-// Anima números importantes contando hacia arriba (respeta prefers-reduced-motion)
 function animarConteos() {
   const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   document.querySelectorAll("[data-count]").forEach((el) => {
@@ -150,7 +130,6 @@ function animarConteos() {
   });
 }
 
-// Íconos SVG propios para la barra inferior
 const ICONOS_NAV = {
   mercado: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l2-4h14l2 4"/><path d="M3 9v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9"/><path d="M9 13h6"/></svg>`,
   carrito: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="20" r="1.5"/><circle cx="18" cy="20" r="1.5"/><path d="M2 3h3l2.4 11.2a2 2 0 0 0 2 1.6h8.8a2 2 0 0 0 2-1.5L22 7H6"/></svg>`,
@@ -161,33 +140,87 @@ const ICONOS_NAV = {
 };
 
 // ======================================================
-// NAVEGACIÓN ENTRE PERFILES Y PESTAÑAS
+// NAVEGACIÓN, MENÚ DE PERFIL Y REINICIAR DEMO
 // ======================================================
 
-function entrarPerfil(perfil) {
+function entrarPerfil(perfil, nombreCampesino) {
   estado.perfil = perfil;
+  if (nombreCampesino) estado.campesinoActivo = nombreCampesino;
   estado.pestana = perfil === "familia" ? "mercado" : "pedidos";
+  estado.barraSeleccionada = null;
+  guardarEstado();
 
   document.getElementById("welcome-screen").classList.add("hidden");
   document.getElementById("app-shell").classList.remove("hidden");
 
+  actualizarEncabezado();
+  dibujarBarraInferior();
+  dibujarVistaActual();
+}
+
+function actualizarEncabezado() {
   const iniciales = document.getElementById("header-initials");
   const titulo = document.getElementById("header-title");
   const sub = document.getElementById("header-subtitle");
 
-  if (perfil === "familia") {
+  if (estado.perfil === "familia") {
     iniciales.textContent = "FM";
     titulo.textContent = "Buenas, familia";
     sub.textContent = "Bogotá · Mercado directo del campo";
   } else {
+    const info = INFO_CAMPESINOS[estado.campesinoActivo] || INFO_CAMPESINOS["Hernando Rojas"];
     const fechaHoy = new Date().toLocaleDateString("es-CO", { weekday: "long", day: "numeric", month: "short" });
-    iniciales.textContent = "HR";
-    titulo.textContent = "Hola, Hernando";
-    sub.textContent = `${fechaHoy.charAt(0).toUpperCase() + fechaHoy.slice(1)} · Sibaté`;
+    iniciales.textContent = info.iniciales;
+    titulo.textContent = `Hola, ${estado.campesinoActivo.split(" ")[0]}`;
+    sub.textContent = `${fechaHoy.charAt(0).toUpperCase() + fechaHoy.slice(1)} · ${info.zona}`;
   }
+}
 
-  dibujarBarraInferior();
-  dibujarVistaActual();
+function abrirMenuPerfil() {
+  const listaCampesinos = CAMPESINOS.map((c) => {
+    const activo = estado.perfil === "campesino" && estado.campesinoActivo === c.nombre;
+    return `
+      <button class="pay-option ${activo ? "selected" : ""}" onclick="cerrarModal(); entrarPerfil('campesino', '${c.nombre}');">
+        <span>👨‍🌾 ${c.nombre} <small style="color:var(--texto-suave); font-weight:600;">(${c.zona})</small></span>
+        <span>${activo ? "●" : "○"}</span>
+      </button>
+    `;
+  }).join("");
+
+  abrirModal(`
+    <h2 class="section-title" style="margin-bottom:10px;">Cambiar perfil</h2>
+
+    <button class="pay-option ${estado.perfil === "familia" ? "selected" : ""}" onclick="cerrarModal(); entrarPerfil('familia');">
+      <span>🧺 Perfil Familia (Bogotá)</span>
+      <span>${estado.perfil === "familia" ? "●" : "○"}</span>
+    </button>
+
+    <div class="section-sub" style="margin:12px 0 8px;">Entrar como campesino:</div>
+    ${listaCampesinos}
+
+    <button class="btn-secondary" onclick="cerrarModal(); volverBienvenida();">Ir a pantalla de bienvenida</button>
+    <button class="btn-danger-outline" onclick="confirmarReiniciarDemo()">🔄 Reiniciar demo (volver todo a 0)</button>
+  `);
+}
+
+function confirmarReiniciarDemo() {
+  abrirModal(`
+    <h2 class="section-title" style="margin-bottom:8px;">¿Reiniciar toda la demo?</h2>
+    <p style="color:var(--texto-suave); margin-bottom:14px;">
+      Se borrarán todos los pedidos, el carrito, las ventas y los saldos para empezar desde $0.
+    </p>
+    <button class="btn-danger-outline" onclick="ejecutarReinicioDemo()">Sí, borrar todo y volver a 0</button>
+    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+  `);
+}
+
+function ejecutarReinicioDemo() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch (e) {}
+  estado = crearEstadoInicial();
+  PRODUCTOS.forEach((p) => { p.disponible = true; });
+  cerrarModal();
+  volverBienvenida();
+  mostrarToast("¡Listo! Demo reiniciada en 0");
 }
 
 function volverBienvenida() {
@@ -197,6 +230,7 @@ function volverBienvenida() {
 
 function cambiarPestana(nueva) {
   estado.pestana = nueva;
+  guardarEstado();
   dibujarBarraInferior();
   dibujarVistaActual();
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -251,7 +285,7 @@ function dibujarVistaActual() {
 }
 
 // ======================================================
-// MERCADOS ARMADOS (Básico, Familiar, Quincenal)
+// MERCADOS ARMADOS
 // ======================================================
 
 function calcularTotalMercadoArmado(mercado) {
@@ -328,9 +362,7 @@ function abrirDetalleMercadoArmado(idMercado) {
       <span>Total productos</span>
       <span>${formatoCOP(totalExacto)}</span>
     </div>
-    <button class="btn-primary" onclick="agregarMercadoAlCarrito('${mercado.id}'); cerrarModal();">
-      Agregar al carrito
-    </button>
+    <button class="btn-primary" onclick="agregarMercadoAlCarrito('${mercado.id}'); cerrarModal();">Agregar al carrito</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cerrar</button>
   `);
 }
@@ -342,11 +374,10 @@ function agregarMercadoAlCarrito(idMercado) {
   estado.carrito = {};
   mercado.lineas.forEach((l) => {
     const prod = PRODUCTOS.find((p) => p.id === l.id);
-    if (prod) {
-      estado.carrito[l.id] = Math.min(l.qty, prod.maxCantidad);
-    }
+    if (prod) estado.carrito[l.id] = Math.min(l.qty, prod.maxCantidad);
   });
 
+  guardarEstado();
   dibujarBarraInferior();
   if (estado.pestana === "mercado") actualizarResultadosMercado();
   mostrarToast(`¡Listo! ${mercado.nombre} en tu carrito`);
@@ -356,7 +387,6 @@ function agregarMercadoAlCarrito(idMercado) {
 // PERFIL FAMILIA: 1. MERCADO (BUSCADOR SIN PERDER FOCO)
 // ======================================================
 
-// Crea la estructura base UNA sola vez; el <input> nunca se destruye al escribir
 function vistaMercado() {
   const main = document.getElementById("main-view");
   main.innerHTML = `
@@ -392,14 +422,13 @@ function tarjetaCarrusel(p) {
         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
           <strong style="color:var(--bosque); font-size:15px;">${formatoCOP(p.precio)} <span style="font-size:12px; color:var(--texto-suave);">/ ${p.etiquetaUnidad}</span></strong>
           <button class="btn-add-circle" style="width:36px; height:36px; font-size:20px;"
-            onclick="event.stopPropagation(); cambiarCantidad(${p.id}, 1)" aria-label="Agregar ${p.nombre}">+</button>
+            onclick="event.stopPropagation(); cambiarCantidad(${p.id}, 1)" aria-label="Agregar">+</button>
         </div>
       </div>
     </article>
   `;
 }
 
-// Actualiza SOLO #mercado-resultados sin tocar el buscador ni subir el scroll
 function actualizarResultadosMercado() {
   const cont = document.getElementById("mercado-resultados");
   if (!cont) return;
@@ -528,13 +557,7 @@ function abrirDetalleProducto(idProducto) {
       <button class="qty-mini" style="width:44px; height:44px;" onclick="cambiarCantidad(${p.id}, 1); abrirDetalleProducto(${p.id});">+</button>
     </div>
 
-    ${
-      p.tipoUnidad === "libra"
-        ? `<button class="btn-secondary" onclick="cambiarCantidad(${p.id}, 0.5); abrirDetalleProducto(${p.id});">
-             + Agregar media libra (½ lb)
-           </button>`
-        : ""
-    }
+    ${p.tipoUnidad === "libra" ? `<button class="btn-secondary" onclick="cambiarCantidad(${p.id}, 0.5); abrirDetalleProducto(${p.id});">+ Agregar media libra (½ lb)</button>` : ""}
     <button class="btn-primary" onclick="cerrarModal()">Listo</button>
   `);
 }
@@ -545,7 +568,6 @@ function cambiarCantidad(idProducto, delta) {
 
   const actual = estado.carrito[idProducto] || 0;
   let nuevo = actual + delta;
-
   if (delta < 0 && actual === 0.5) nuevo = 0;
   if (nuevo < 0) nuevo = 0;
 
@@ -555,8 +577,9 @@ function cambiarCantidad(idProducto, delta) {
   }
 
   if (nuevo === 0) delete estado.carrito[idProducto];
-  else estado.carrito[idProducto] = Math.round(nuevo * 2) / 2; // mantiene pasos de 0.5 exactos
+  else estado.carrito[idProducto] = Math.round(nuevo * 2) / 2;
 
+  guardarEstado();
   if (delta > 0 && actual === 0) mostrarToast("¡Agregado a tu canasta!");
   dibujarBarraInferior();
 
@@ -565,7 +588,7 @@ function cambiarCantidad(idProducto, delta) {
 }
 
 // ======================================================
-// PERFIL FAMILIA: 2. CARRITO Y TOTALES REDONDEADOS
+// PERFIL FAMILIA: 2. CARRITO Y CREACIÓN DE PEDIDO REAL
 // ======================================================
 
 function calcularTotalesCarrito() {
@@ -582,7 +605,6 @@ function calcularTotalesCarrito() {
     }
   }
 
-  // Redondeo exacto: Productos a $50, Envío $15.000, Servicio 4% a $100
   const productos = sumaCruda > 0 ? Math.round(sumaCruda / 50) * 50 : 0;
   const envio = productos > 0 ? 15000 : 0;
   const servicio = productos > 0 ? Math.round((productos * 0.04) / 100) * 100 : 0;
@@ -620,7 +642,7 @@ function vistaCarrito() {
         <div class="cat-circle ${item.colorCat}" style="width:44px; height:44px; font-size:22px;">${item.emoji}</div>
         <div style="min-width:0;">
           <strong style="display:block; font-size:15px;">${formatearCantidadUnidad(item, item.cant)} ${item.nombre}</strong>
-          <div style="font-size:13px; color:var(--texto-suave);">${formatoCOP(item.precio)} / ${item.etiquetaUnidad}</div>
+          <div style="font-size:13px; color:var(--texto-suave);">${formatoCOP(item.precio)} / ${item.etiquetaUnidad} · ${item.campesino}</div>
         </div>
       </div>
       <div style="text-align:right; flex-shrink:0;">
@@ -678,7 +700,7 @@ function abrirModalPago() {
     <h2 class="section-title" style="margin-bottom:6px;">Elige cómo pagar</h2>
     <p style="color:var(--texto-suave); margin-bottom:14px;">Total a pagar: <strong>${formatoCOP(total)}</strong></p>
     ${opciones}
-    <button class="btn-primary" onclick="confirmarPagoSimulado()">Confirmar pago con ${estado.metodoPago}</button>
+    <button class="btn-primary" onclick="confirmarPagoReal()">Confirmar pago con ${estado.metodoPago}</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
@@ -688,200 +710,387 @@ function elegirMetodoPago(m) {
   abrirModalPago();
 }
 
-function confirmarPagoSimulado() {
-  const { productos, envio } = calcularTotalesCarrito();
-  const listaNueva = Object.entries(estado.carrito).map(([id, cant]) => {
-    const p = PRODUCTOS.find((item) => item.id === Number(id));
-    return p ? `${formatearCantidadUnidad(p, cant)} ${p.nombre}` : "";
-  }).filter(Boolean);
+// Crea el pedido real #RJ-1001, #RJ-1002... dividido por campesino y vacía el carrito
+function confirmarPagoReal() {
+  const { productos, envio, servicio, total } = calcularTotalesCarrito();
+  if (productos <= 0) return;
 
-  estado.pedidos[0].valorProductos = productos;
-  estado.pedidos[0].envio = envio;
-  if (listaNueva.length > 0) estado.pedidos[0].listaAlistamiento = listaNueva;
+  const numeroPedido = `RJ-${estado.consecutivoPedido}`;
+  estado.consecutivoPedido += 1;
+
+  // Agrupar productos por campesino
+  const porCampesino = {};
+  for (const [id, cant] of Object.entries(estado.carrito)) {
+    const prod = PRODUCTOS.find((p) => p.id === Number(id));
+    if (!prod || cant <= 0) continue;
+    if (!porCampesino[prod.campesino]) {
+      porCampesino[prod.campesino] = { campesino: prod.campesino, zona: prod.zona, items: [], subtotal: 0 };
+    }
+    const lineaTotal = prod.precio * cant;
+    porCampesino[prod.campesino].items.push({
+      id: prod.id,
+      nombre: prod.nombre,
+      emoji: prod.emoji,
+      textoCantidad: formatearCantidadUnidad(prod, cant),
+      subtotal: lineaTotal
+    });
+    porCampesino[prod.campesino].subtotal += lineaTotal;
+  }
+
+  const nombresCamp = Object.keys(porCampesino);
+  const envioPorCamp = Math.round(envio / nombresCamp.length);
+
+  const subpedidos = nombresCamp.map((nombre) => ({
+    campesino: nombre,
+    zona: porCampesino[nombre].zona,
+    items: porCampesino[nombre].items,
+    valorProductos: Math.round(porCampesino[nombre].subtotal / 50) * 50,
+    envioAsignado: envioPorCamp,
+    estado: "Nuevo",            // Nuevo | Aceptado | Preparando | Enviado | Entregado | Rechazado
+    motivoRechazo: "",
+    fechaAceptado: null,
+    fechaEntregado: null,
+    recibidoPorFamilia: false,
+    calificacion: 0
+  }));
+
+  estado.pedidos.unshift({
+    id: numeroPedido,
+    fechaCreacion: new Date().toISOString(),
+    familia: "Familia Morales",
+    direccion: "Cra 68 # 24B-15, Apto 402 · Bogotá",
+    totalProductos: productos,
+    envio,
+    servicio,
+    totalPagado: total,
+    subpedidos
+  });
+
+  estado.carrito = {};
+  guardarEstado();
+  dibujarBarraInferior();
 
   abrirModal(`
     <div style="text-align:center; padding:8px 0;">
       <div class="success-check">✓</div>
       <h2 class="section-title" style="margin-bottom:6px;">¡Pago confirmado!</h2>
       <p style="color:var(--texto-suave); margin-bottom:16px;">
-        Tu pedido <strong>#RJ-1024</strong> ya llegó a la finca de Hernando Rojas en Sibaté.
+        Se creó tu pedido <strong>#${numeroPedido}</strong> y ya llegó a ${nombresCamp.length === 1 ? nombresCamp[0] : `${nombresCamp.length} campesinos`}.
       </p>
-      <button class="btn-primary" onclick="cerrarModal(); mostrarToast('¡Listo! Pedido confirmado'); cambiarPestana('pedido');">
-        Ver mi pedido #RJ-1024
+      <button class="btn-primary" onclick="cerrarModal(); mostrarToast('¡Listo! Pedido #${numeroPedido}'); cambiarPestana('pedido');">
+        Ver mi pedido #${numeroPedido}
       </button>
     </div>
   `);
 }
 
 // ======================================================
-// PERFIL FAMILIA: 3. MI PEDIDO #RJ-1024 + MAPA SVG
+// PERFIL FAMILIA: 3. MI PEDIDO (REAL Y SINCRONIZADO)
 // ======================================================
 
 function vistaMiPedido() {
-  const pedido = estado.pedidos[0];
-  const pasos = [
-    { nombre: "Pedido confirmado", desc: "Hernando recibió tu lista de mercado.", ico: "📝" },
-    { nombre: "Preparando", desc: "Cosechando y empacando tus alimentos.", ico: "🧺" },
-    { nombre: "Enviado por el campesino", desc: "Tu mercado va camino a tu puerta.", ico: "🌿" },
-    { nombre: "Entregado", desc: "Recibido directamente en tu hogar.", ico: "🏡" }
-  ];
-  const idxActual = pasos.findIndex((p) => p.nombre === pedido.estado);
-
-  const timelineHtml = pasos.map((p, idx) => `
-    <div class="step ${idx <= idxActual ? "done" : ""} ${idx === idxActual && idx < 3 ? "current" : ""}">
-      <div class="step-ico">${p.ico}</div>
-      <div>
-        <strong>${p.nombre}</strong>
-        <p style="font-size:14px; color:var(--texto-suave);">${p.desc}</p>
-      </div>
-    </div>
-  `).join("");
-
-  const listaPedidoHtml = pedido.listaAlistamiento.map((it) => `<li>• ${it}</li>`).join("");
-
-  let cierreHtml = "";
-  if (!pedido.recibidoPorFamilia) {
-    cierreHtml = `<button class="btn-primary" onclick="confirmarReciboFamilia()">Confirmar que recibí mi mercado</button>`;
-  } else {
-    const estrellas = [1, 2, 3, 4, 5].map((n) => `
-      <button class="star-btn ${pedido.calificacion >= n ? "active" : ""}" onclick="calificarPedido(${n})">★</button>
-    `).join("");
-    cierreHtml = `
-      <div class="card card-accent" style="text-align:center;">
-        <strong style="color:var(--bosque); font-size:18px;">¡Gracias por confirmar!</strong>
-        <p style="font-size:15px; color:var(--texto-suave); margin-top:4px;">Califica la frescura de la cosecha de Hernando:</p>
-        <div class="stars-row">${estrellas}</div>
-        ${pedido.calificacion > 0 ? `<p style="font-weight:800; color:var(--bosque);">Calificaste con ${pedido.calificacion} estrellas</p>` : ""}
+  if (estado.pedidos.length === 0) {
+    document.getElementById("main-view").innerHTML = `
+      <div class="card" style="text-align:center; padding:32px 20px; margin-top:12px;">
+        <div style="font-size:48px; margin-bottom:8px;">📦</div>
+        <h2 style="font-size:22px; margin-bottom:6px;">Aún no tienes pedidos</h2>
+        <p style="color:var(--texto-suave); margin-bottom:14px;">Cuando hagas tu compra en el carrito, podrás seguir aquí cada paso desde la finca hasta tu puerta.</p>
+        <button class="btn-primary" onclick="cambiarPestana('mercado')">Ir al mercado</button>
       </div>
     `;
+    return;
   }
+
+  const pedidosHtml = estado.pedidos.map((pedido) => {
+    const bloquesSub = pedido.subpedidos.map((sub, idxSub) => {
+      const info = INFO_CAMPESINOS[sub.campesino] || { iniciales: "RJ", zona: sub.zona };
+      const listaItems = sub.items.map((it) => `<li>• ${it.textoCantidad} ${it.nombre}</li>`).join("");
+
+      if (sub.estado === "Rechazado") {
+        return `
+          <div class="card card-accent card-accent-red">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <strong>#${pedido.id} · ${sub.campesino}</strong>
+              <span class="badge badge-rojo">Rechazado</span>
+            </div>
+            <div class="rejected-box">
+              <strong>El campesino no pudo atender tu pedido:</strong> ${sub.motivoRechazo}
+            </div>
+            <ul class="checklist">${listaItems}</ul>
+            <button class="btn-primary" onclick="simularOtroCampesino('${pedido.id}', ${idxSub})">
+              Elegir otro campesino
+            </button>
+          </div>
+        `;
+      }
+
+      const pasos = [
+        { clave: "Nuevo", titulo: "Pedido confirmado", ico: "📝" },
+        { clave: "Aceptado", titulo: "Aceptado", ico: "🤝" },
+        { clave: "Preparando", titulo: "Preparando", ico: "🧺" },
+        { clave: "Enviado", titulo: "Enviado por el campesino", ico: "🌿" },
+        { clave: "Entregado", titulo: "Entregado", ico: "🏡" }
+      ];
+      const idxActual = pasos.findIndex((p) => p.clave === sub.estado);
+
+      const timelineHtml = pasos.map((p, i) => `
+        <div class="step ${i <= idxActual ? "done" : ""} ${i === idxActual && i < 4 ? "current" : ""}">
+          <div class="step-ico">${p.ico}</div>
+          <div><strong>${p.titulo}</strong></div>
+        </div>
+      `).join("");
+
+      let cierreHtml = "";
+      if (sub.estado === "Enviado" || (sub.estado === "Entregado" && !sub.recibidoPorFamilia)) {
+        cierreHtml = `<button class="btn-primary" onclick="confirmarReciboFamilia('${pedido.id}', ${idxSub})">Confirmar que recibí mi mercado</button>`;
+      } else if (sub.recibidoPorFamilia) {
+        const estrellas = [1, 2, 3, 4, 5].map((n) => `
+          <button class="star-btn ${sub.calificacion >= n ? "active" : ""}" onclick="calificarSubpedido('${pedido.id}', ${idxSub}, ${n})">★</button>
+        `).join("");
+        cierreHtml = `
+          <div style="text-align:center; margin-top:12px; padding-top:12px; border-top:1px solid var(--borde);">
+            <strong style="color:var(--bosque);">¡Gracias por confirmar! Califica a ${sub.campesino.split(" ")[0]}:</strong>
+            <div class="stars-row">${estrellas}</div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="card card-accent">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="initials-circle initials-earth" style="width:38px; height:38px; font-size:14px;">${info.iniciales}</div>
+              <div>
+                <strong style="display:block;">#${pedido.id} · ${sub.campesino}</strong>
+                <span style="font-size:13px; color:var(--texto-suave);">${sub.zona}, Cundinamarca</span>
+              </div>
+            </div>
+            <span class="badge ${sub.estado === "Entregado" ? "badge-entregado" : "badge-hoja"}">${sub.estado}</span>
+          </div>
+          <div class="timeline">${timelineHtml}</div>
+          <ul class="checklist">${listaItems}</ul>
+          ${cierreHtml}
+        </div>
+      `;
+    }).join("");
+
+    return bloquesSub;
+  }).join("");
 
   document.getElementById("main-view").innerHTML = `
     <div class="section-head" style="margin-top:6px;">
-      <h3 class="section-title">Mi pedido #${pedido.id}</h3>
-      <span class="badge ${pedido.estado === "Entregado" ? "badge-entregado" : "badge-hoja"}">${pedido.estado}</span>
+      <h3 class="section-title">Mis pedidos (${estado.pedidos.length})</h3>
+      <span class="section-sub">En vivo</span>
     </div>
-
-    <div class="card" style="padding:14px;">
-      <div class="section-sub" style="margin-bottom:8px;">Ruta directa: Sibaté → Tu puerta</div>
-      <svg viewBox="0 0 360 110" width="100%" height="110" aria-label="Mapa de ruta de la finca a la casa">
-        <rect width="360" height="110" rx="14" fill="#F4EFE4"/>
-        <path d="M0 88 Q90 60 180 76 T360 66 L360 110 L0 110 Z" fill="#E4F3E1"/>
-        <path d="M52 62 C115 24, 240 94, 308 48" stroke="#2F6B3A" stroke-width="4" stroke-dasharray="7 6" fill="none" stroke-linecap="round"/>
-        <circle cx="52" cy="62" r="16" fill="#8B5E3C"/>
-        <text x="52" y="68" text-anchor="middle" font-size="16">🌾</text>
-        <text x="52" y="96" text-anchor="middle" font-size="11" font-weight="700" fill="#2B2B2B">Finca Sibaté</text>
-        <circle cx="308" cy="48" r="16" fill="#2F6B3A"/>
-        <text x="308" y="54" text-anchor="middle" font-size="16">🏡</text>
-        <text x="308" y="82" text-anchor="middle" font-size="11" font-weight="700" fill="#2B2B2B">Tu hogar</text>
-      </svg>
-    </div>
-
-    <div class="card card-accent">
-      <div class="section-sub">Seguimiento en vivo</div>
-      <div class="timeline">${timelineHtml}</div>
-      <ul class="checklist">${listaPedidoHtml}</ul>
-    </div>
-
-    <div class="card card-accent card-accent-earth">
-      <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-        <div class="initials-circle initials-earth">HR</div>
-        <div>
-          <span style="font-size:12px; font-weight:800; color:var(--naranja);">TU CAMPESINO</span>
-          <strong style="display:block; font-size:18px;">${estado.campesino.nombre}</strong>
-          <span style="font-size:14px; color:var(--texto-suave);">${estado.campesino.vereda}</span>
-        </div>
-      </div>
-      <p style="font-size:15px; color:var(--texto-suave);">${estado.campesino.historia}</p>
-      <div class="farmer-quote">${estado.campesino.frase}</div>
-    </div>
-
-    ${cierreHtml}
+    ${pedidosHtml}
   `;
 }
 
-function confirmarReciboFamilia() {
-  const pedido = estado.pedidos[0];
-  pedido.estado = "Entregado";
-  pedido.recibidoPorFamilia = true;
-  acreditarSaldoCampesino(pedido);
+function simularOtroCampesino(idPedido, idxSub) {
+  mostrarToast("Buscando otro campesino disponible en tu zona...");
+}
+
+function confirmarReciboFamilia(idPedido, idxSub) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
+  const sub = pedido.subpedidos[idxSub];
+  sub.estado = "Entregado";
+  sub.recibidoPorFamilia = true;
+  if (!sub.fechaEntregado) sub.fechaEntregado = new Date().toISOString();
+  guardarEstado();
   mostrarToast("¡Listo! Mercado recibido");
   vistaMiPedido();
 }
 
-function calificarPedido(n) {
-  estado.pedidos[0].calificacion = n;
-  mostrarToast("¡Gracias por calificar!");
+function calificarSubpedido(idPedido, idxSub, n) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
+  pedido.subpedidos[idxSub].calificacion = n;
+  guardarEstado();
+  mostrarToast("¡Gracias por tu calificación!");
   vistaMiPedido();
 }
 
 // ======================================================
-// PERFIL CAMPESINO: 1. PEDIDOS + KPIs + GRÁFICA SVG
+// PERFIL CAMPESINO: CÁLCULOS REALES Y GRÁFICA 7 DÍAS
 // ======================================================
 
-function graficaBarrasSVG() {
-  const max = Math.max(...VENTAS_7_DIAS.map((v) => v.monto));
-  const barras = VENTAS_7_DIAS.map((v, i) => {
-    const h = Math.round((v.monto / max) * 70);
+function obtenerSubpedidosCampesino(nombre) {
+  const lista = [];
+  estado.pedidos.forEach((pedido) => {
+    pedido.subpedidos.forEach((sub, idxSub) => {
+      if (sub.campesino === nombre) {
+        lista.push({ pedido, sub, idxSub });
+      }
+    });
+  });
+  return lista;
+}
+
+function calcularMetricasCampesino(nombre) {
+  const todos = obtenerSubpedidosCampesino(nombre);
+  const ahora = new Date();
+  const hace7Dias = new Date(ahora);
+  hace7Dias.setDate(ahora.getDate() - 6);
+  hace7Dias.setHours(0, 0, 0, 0);
+
+  // Por alistar: aceptados o preparando (aún no enviados)
+  const porAlistar = todos.filter(({ sub }) => sub.estado === "Aceptado" || sub.estado === "Preparando").length;
+
+  // Últimos 7 días (etiquetas y suma de productos de pedidos aceptados cada día)
+  const dias = [];
+  const nombresDia = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(ahora);
+    d.setDate(ahora.getDate() - i);
+    dias.push({
+      clave: claveFechaLocal(d),
+      etiqueta: i === 0 ? "Hoy" : nombresDia[d.getDay()],
+      monto: 0,
+      cantidad: 0,
+      esHoy: i === 0
+    });
+  }
+
+  let ventasSemana = 0;
+  todos.forEach(({ sub }) => {
+    if (sub.fechaAceptado && sub.estado !== "Rechazado") {
+      const clave = claveFechaLocal(sub.fechaAceptado);
+      const dia = dias.find((x) => x.clave === clave);
+      if (dia) {
+        dia.monto += sub.valorProductos;
+        dia.cantidad += 1;
+        ventasSemana += sub.valorProductos;
+      }
+    }
+  });
+
+  // Saldo: suma de productos + envío de pedidos Entregados, menos retiros reales
+  const ingresosEntregados = todos
+    .filter(({ sub }) => sub.estado === "Entregado")
+    .reduce((acc, { sub }) => acc + sub.valorProductos + sub.envioAsignado, 0);
+
+  const totalRetiros = estado.retiros
+    .filter((r) => r.campesino === nombre)
+    .reduce((acc, r) => acc + r.monto, 0);
+
+  const saldo = Math.max(0, ingresosEntregados - totalRetiros);
+
+  return { porAlistar, ventasSemana, saldo, dias, todos };
+}
+
+function graficaVentasSVG(dias) {
+  const maxMonto = Math.max(...dias.map((d) => d.monto), 0);
+  const sinVentas = maxMonto === 0;
+
+  const barras = dias.map((d, i) => {
     const x = 14 + i * 48;
+    const h = sinVentas ? 8 : Math.max(8, Math.round((d.monto / maxMonto) * 68));
     const y = 86 - h;
-    const fill = i === VENTAS_7_DIAS.length - 1 ? "#D9822B" : "#6FAE4F";
+    const fill = sinVentas ? "#DDD7CA" : (d.esHoy ? "#D9822B" : "#6FAE4F");
     return `
-      <rect x="${x}" y="${y}" width="26" height="${h}" rx="7" fill="${fill}"/>
-      <text x="${x + 13}" y="104" text-anchor="middle" font-size="11" font-weight="700" fill="#595751">${v.dia}</text>
+      <g onclick="seleccionarBarraDia(${i})" style="cursor:pointer;">
+        <rect class="chart-bar" x="${x}" y="${y}" width="26" height="${h}" rx="7" fill="${fill}"/>
+        <text x="${x + 13}" y="104" text-anchor="middle" font-size="11" font-weight="700" fill="#595751">${d.etiqueta}</text>
+      </g>
     `;
   }).join("");
+
+  let detalleHtml = "";
+  if (sinVentas) {
+    detalleHtml = `<div class="chart-detail" style="color:var(--texto-suave);">Aún no hay ventas esta semana</div>`;
+  } else if (estado.barraSeleccionada !== null && dias[estado.barraSeleccionada]) {
+    const sel = dias[estado.barraSeleccionada];
+    detalleHtml = `<div class="chart-detail">${sel.etiqueta}: ${formatoCOP(sel.monto)} (${sel.cantidad} ${sel.cantidad === 1 ? "pedido" : "pedidos"})</div>`;
+  } else {
+    detalleHtml = `<div class="chart-detail" style="color:var(--texto-suave); font-weight:600;">Toca una barra para ver el detalle del día</div>`;
+  }
 
   return `
     <div class="card">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
         <strong style="font-size:16px;">Ventas últimos 7 días</strong>
-        <span style="font-size:13px; font-weight:700; color:var(--naranja);">Hoy en curso</span>
+        <span style="font-size:13px; font-weight:700; color:var(--naranja);">Hoy resaltado</span>
       </div>
       <svg viewBox="0 0 350 112" width="100%" height="112" aria-label="Gráfica de ventas de los últimos 7 días">
         ${barras}
       </svg>
+      ${detalleHtml}
     </div>
   `;
 }
 
+function seleccionarBarraDia(idx) {
+  estado.barraSeleccionada = idx;
+  vistaPedidosCampesino();
+}
+
+// ======================================================
+// PERFIL CAMPESINO: 1. PEDIDOS (ACEPTAR / RECHAZAR)
+// ======================================================
+
 function vistaPedidosCampesino() {
-  const porAlistar = estado.pedidos.filter((p) => p.estado !== "Entregado").length;
+  const { porAlistar, ventasSemana, saldo, dias, todos } = calcularMetricasCampesino(estado.campesinoActivo);
+  const activos = todos.filter(({ sub }) => sub.estado !== "Rechazado");
+  const rechazados = todos.filter(({ sub }) => sub.estado === "Rechazado");
 
-  const tarjetas = estado.pedidos.map((p) => {
-    const totalCampesino = p.valorProductos + p.envio;
-    const itemsHtml = p.listaAlistamiento.map((it) => `<li>• ${it}</li>`).join("");
-    let btnHtml = "";
+  const renderTarjeta = ({ pedido, sub, idxSub }) => {
+    const totalRecibe = sub.valorProductos + sub.envioAsignado;
+    const listaHtml = sub.items.map((it) => `<li>• ${it.textoCantidad} ${it.nombre}</li>`).join("");
 
-    if (!p.aceptado) {
-      btnHtml = `<button class="btn-primary" onclick="aceptarPedidoCampesino('${p.id}')">Aceptar</button>`;
-    } else if (p.estado === "Pedido confirmado") {
-      btnHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Preparando', 'Marcar preparando')">Marcar preparando</button>`;
-    } else if (p.estado === "Preparando") {
-      btnHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Enviado por el campesino', 'Marcar enviado')">Marcar enviado</button>`;
-    } else if (p.estado === "Enviado por el campesino") {
-      btnHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${p.id}', 'Entregado', 'Marcar entregado')">Marcar entregado</button>`;
-    } else {
-      btnHtml = `<div style="margin-top:12px; font-weight:800; color:var(--bosque);">✓ Entregado y sumado a tu saldo</div>`;
+    let botonesHtml = "";
+    if (sub.estado === "Nuevo") {
+      botonesHtml = `
+        <div class="btn-row">
+          <button class="btn-danger-outline" onclick="abrirModalRechazo('${pedido.id}', ${idxSub})">Rechazar</button>
+          <button class="btn-primary" onclick="aceptarSubpedido('${pedido.id}', ${idxSub})">Aceptar</button>
+        </div>
+      `;
+    } else if (sub.estado === "Aceptado") {
+      botonesHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${pedido.id}', ${idxSub}, 'Preparando', 'Marcar preparando')">Marcar preparando</button>`;
+    } else if (sub.estado === "Preparando") {
+      botonesHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${pedido.id}', ${idxSub}, 'Enviado', 'Marcar enviado')">Marcar enviado</button>`;
+    } else if (sub.estado === "Enviado") {
+      botonesHtml = `<button class="btn-primary" onclick="abrirFotoPaso('${pedido.id}', ${idxSub}, 'Entregado', 'Marcar entregado')">Marcar entregado</button>`;
+    } else if (sub.estado === "Entregado") {
+      botonesHtml = `<div style="margin-top:12px; font-weight:800; color:var(--bosque);">✓ Entregado y sumado a tu saldo</div>`;
+    } else if (sub.estado === "Rechazado") {
+      botonesHtml = `<div class="rejected-box">Motivo: ${sub.motivoRechazo}</div>`;
     }
 
     return `
-      <article class="card card-accent card-accent-orange">
+      <article class="card card-accent ${sub.estado === "Rechazado" ? "card-accent-red" : "card-accent-orange"}">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-          <strong style="font-size:18px;">Pedido #${p.id}</strong>
-          <span class="badge ${p.estado === "Entregado" ? "badge-entregado" : "badge-naranja"}">${p.estado}</span>
+          <strong style="font-size:18px;">Pedido #${pedido.id}</strong>
+          <span class="badge ${sub.estado === "Entregado" ? "badge-entregado" : sub.estado === "Rechazado" ? "badge-rojo" : "badge-naranja"}">${sub.estado}</span>
         </div>
-        <p style="font-weight:700;">${p.familia}</p>
-        <p style="font-size:14px; color:var(--tierra); margin-top:2px;">📍 ${p.direccion}</p>
-        <ul class="checklist">${itemsHtml}</ul>
+        <p style="font-weight:700;">${pedido.familia}</p>
+        <p style="font-size:14px; color:var(--tierra); margin-top:2px;">📍 ${pedido.direccion}</p>
+        <ul class="checklist">${listaHtml}</ul>
         <div style="display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:14px; color:var(--texto-suave);">Recibes (productos + envío)</span>
-          <strong style="font-size:20px; color:var(--bosque);">${formatoCOP(totalCampesino)}</strong>
+          <span style="font-size:14px; color:var(--texto-suave);">Recibes (tus productos + envío)</span>
+          <strong style="font-size:19px; color:var(--bosque);">${formatoCOP(totalRecibe)}</strong>
         </div>
-        ${btnHtml}
+        ${botonesHtml}
       </article>
     `;
-  }).join("");
+  };
+
+  const activosHtml = activos.length
+    ? activos.map(renderTarjeta).join("")
+    : `<div class="card" style="text-align:center; padding:26px 16px; color:var(--texto-suave);">
+         <div style="font-size:38px; margin-bottom:6px;">🧺</div>
+         <strong style="display:block; color:var(--texto);">Aún no tienes pedidos</strong>
+         <span style="font-size:14px;">Cuando una familia compre tus productos, aparecerán aquí al instante.</span>
+       </div>`;
+
+  const rechazadosHtml = rechazados.length > 0 ? `
+    <button class="collapsible-btn" onclick="alternarRechazados()">
+      <span>Rechazados (${rechazados.length})</span>
+      <span>${estado.mostrarRechazados ? "▲" : "▼"}</span>
+    </button>
+    ${estado.mostrarRechazados ? rechazados.map(renderTarjeta).join("") : ""}
+  ` : "";
 
   document.getElementById("main-view").innerHTML = `
     <div class="kpi-grid" style="margin-top:8px;">
@@ -891,76 +1100,111 @@ function vistaPedidosCampesino() {
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Semana</div>
-        <div class="kpi-val" style="font-size:15px;">${formatoCOP(estado.campesino.ventasSemana)}</div>
+        <div class="kpi-val" style="font-size:15px;" data-count="${ventasSemana}">${formatoCOP(ventasSemana)}</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Mi saldo</div>
-        <div class="kpi-val" style="font-size:15px;" data-count="${estado.campesino.saldo}">${formatoCOP(estado.campesino.saldo)}</div>
+        <div class="kpi-val" style="font-size:15px;" data-count="${saldo}">${formatoCOP(saldo)}</div>
       </div>
     </div>
 
-    ${graficaBarrasSVG()}
+    ${graficaVentasSVG(dias)}
 
     <div class="section-head">
       <h3 class="section-title">Pedidos entrantes</h3>
-      <span class="section-sub">Lista de alistamiento</span>
+      <span class="section-sub">${activos.length} activos</span>
     </div>
-    ${tarjetas}
+    ${activosHtml}
+    ${rechazadosHtml}
   `;
 }
 
-function aceptarPedidoCampesino(id) {
-  const p = estado.pedidos.find((item) => item.id === id);
-  if (!p) return;
-  p.aceptado = true;
-  mostrarToast("¡Listo! Pedido aceptado");
+function alternarRechazados() {
+  estado.mostrarRechazados = !estado.mostrarRechazados;
   vistaPedidosCampesino();
 }
 
-function abrirFotoPaso(idPedido, nuevoEstado, textoBoton) {
+function aceptarSubpedido(idPedido, idxSub) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
+  const sub = pedido.subpedidos[idxSub];
+  sub.estado = "Aceptado";
+  sub.fechaAceptado = new Date().toISOString();
+  guardarEstado();
+  mostrarToast("¡Listo! Pedido aceptado");
+  vistaPedidosCampesino();
+  animarConteos();
+}
+
+function abrirModalRechazo(idPedido, idxSub) {
+  motivoSeleccionado = MOTIVOS_RECHAZO[0];
+  renderModalRechazo(idPedido, idxSub);
+}
+
+function renderModalRechazo(idPedido, idxSub) {
+  const opciones = MOTIVOS_RECHAZO.map((m) => `
+    <button class="pay-option ${motivoSeleccionado === m ? "selected" : ""}" onclick="motivoSeleccionado='${m}'; renderModalRechazo('${idPedido}', ${idxSub});">
+      <span>${m}</span>
+      <span>${motivoSeleccionado === m ? "●" : "○"}</span>
+    </button>
+  `).join("");
+
+  abrirModal(`
+    <h2 class="section-title" style="margin-bottom:6px;">¿Por qué rechazas el pedido #${idPedido}?</h2>
+    <p style="color:var(--texto-suave); margin-bottom:14px;">Le avisaremos a la familia el motivo.</p>
+    ${opciones}
+    <button class="btn-danger-outline" onclick="confirmarRechazo('${idPedido}', ${idxSub})">Confirmar rechazo</button>
+    <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+  `);
+}
+
+function confirmarRechazo(idPedido, idxSub) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
+  const sub = pedido.subpedidos[idxSub];
+  sub.estado = "Rechazado";
+  sub.motivoRechazo = motivoSeleccionado;
+  guardarEstado();
+  cerrarModal();
+  mostrarToast("Pedido rechazado");
+  vistaPedidosCampesino();
+}
+
+function abrirFotoPaso(idPedido, idxSub, nuevoEstado, textoBoton) {
   abrirModal(`
     <h2 class="section-title" style="margin-bottom:6px;">${textoBoton}</h2>
-    <p style="color:var(--texto-suave);">Toma una foto rápida de respaldo para la familia (simulada).</p>
+    <p style="color:var(--texto-suave);">Foto rápida de respaldo para la familia (simulada).</p>
     <div class="photo-box">
       <div style="font-size:48px;">📸🧺🥕</div>
       <strong style="display:block; margin-top:8px;">Foto lista · Pedido #${idPedido}</strong>
       <span style="font-size:14px; color:var(--texto-suave);">Pasará a: ${nuevoEstado}</span>
     </div>
-    <button class="btn-primary" onclick="confirmarPasoCampesino('${idPedido}', '${nuevoEstado}')">Confirmar</button>
+    <button class="btn-primary" onclick="confirmarPasoCampesino('${idPedido}', ${idxSub}, '${nuevoEstado}')">Confirmar</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
 
-function confirmarPasoCampesino(idPedido, nuevoEstado) {
-  const p = estado.pedidos.find((item) => item.id === idPedido);
-  if (!p) return;
-  p.estado = nuevoEstado;
-  if (nuevoEstado === "Entregado") acreditarSaldoCampesino(p);
+function confirmarPasoCampesino(idPedido, idxSub, nuevoEstado) {
+  const pedido = estado.pedidos.find((p) => p.id === idPedido);
+  if (!pedido) return;
+  const sub = pedido.subpedidos[idxSub];
+  sub.estado = nuevoEstado;
+  if (nuevoEstado === "Entregado" && !sub.fechaEntregado) {
+    sub.fechaEntregado = new Date().toISOString();
+  }
+  guardarEstado();
   cerrarModal();
   mostrarToast("¡Listo! Estado actualizado");
   vistaPedidosCampesino();
   animarConteos();
 }
 
-function acreditarSaldoCampesino(pedido) {
-  if (pedido.saldoAcreditado) return;
-  const pago = pedido.valorProductos + pedido.envio;
-  estado.campesino.saldo += pago;
-  estado.campesino.historial.unshift({
-    titulo: `Pedido #${pedido.id} entregado`,
-    fecha: "Ahora mismo · Productos + envío",
-    monto: pago,
-    tipo: "in"
-  });
-  pedido.saldoAcreditado = true;
-}
-
 // ======================================================
-// PERFIL CAMPESINO: 2. MIS PRODUCTOS (SIN PERDER FOCO)
+// PERFIL CAMPESINO: 2. MIS PRODUCTOS
 // ======================================================
 
 function vistaMisProductos() {
-  const mios = PRODUCTOS.filter((p) => p.campesino === "Hernando Rojas");
+  const mios = PRODUCTOS.filter((p) => p.campesino === estado.campesinoActivo);
   const cards = mios.map((p) => `
     <article class="card">
       <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
@@ -1013,26 +1257,60 @@ function actualizarPrecioProducto(id, nuevoPrecio) {
 }
 
 // ======================================================
-// PERFIL CAMPESINO: 3. MI SALDO
+// PERFIL CAMPESINO: 3. MI SALDO (100% REAL)
 // ======================================================
 
 function vistaSaldoCampesino() {
-  const historialHtml = estado.campesino.historial.map((h) => `
-    <div class="cart-row">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <div class="cat-circle ${h.tipo === "in" ? "bg-verduras" : "bg-tuberculos"}" style="width:42px; height:42px; font-size:20px;">
-          ${h.tipo === "in" ? "⬇️" : "🏦"}
+  const nombre = estado.campesinoActivo;
+  const info = INFO_CAMPESINOS[nombre] || INFO_CAMPESINOS["Hernando Rojas"];
+  const { saldo, todos } = calcularMetricasCampesino(nombre);
+
+  // Construir historial solo con movimientos reales
+  const movimientos = [];
+  todos.forEach(({ pedido, sub }) => {
+    if (sub.estado === "Entregado") {
+      movimientos.push({
+        titulo: `Pedido #${pedido.id} entregado`,
+        fecha: new Date(sub.fechaEntregado || pedido.fechaCreacion).toLocaleDateString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+        monto: sub.valorProductos + sub.envioAsignado,
+        tipo: "in",
+        ts: new Date(sub.fechaEntregado || pedido.fechaCreacion).getTime()
+      });
+    }
+  });
+
+  estado.retiros
+    .filter((r) => r.campesino === nombre)
+    .forEach((r) => {
+      movimientos.push({
+        titulo: "Retiro a cuenta bancaria",
+        fecha: new Date(r.fecha).toLocaleDateString("es-CO", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+        monto: -r.monto,
+        tipo: "out",
+        ts: new Date(r.fecha).getTime()
+      });
+    });
+
+  movimientos.sort((a, b) => b.ts - a.ts);
+
+  const historialHtml = movimientos.length
+    ? movimientos.map((h) => `
+        <div class="cart-row">
+          <div style="display:flex; align-items:center; gap:10px;">
+            <div class="cat-circle ${h.tipo === "in" ? "bg-verduras" : "bg-tuberculos"}" style="width:42px; height:42px; font-size:20px;">
+              ${h.tipo === "in" ? "⬇️" : "🏦"}
+            </div>
+            <div>
+              <strong>${h.titulo}</strong>
+              <div style="font-size:13px; color:var(--texto-suave);">${h.fecha}</div>
+            </div>
+          </div>
+          <strong style="color:${h.monto >= 0 ? "var(--bosque)" : "var(--tierra)"};">
+            ${h.monto >= 0 ? "+" : ""}${formatoCOP(h.monto)}
+          </strong>
         </div>
-        <div>
-          <strong>${h.titulo}</strong>
-          <div style="font-size:13px; color:var(--texto-suave);">${h.fecha}</div>
-        </div>
-      </div>
-      <strong style="color:${h.monto >= 0 ? "var(--bosque)" : "var(--tierra)"};">
-        ${h.monto >= 0 ? "+" : ""}${formatoCOP(h.monto)}
-      </strong>
-    </div>
-  `).join("");
+      `).join("")
+    : `<p style="color:var(--texto-suave); text-align:center; padding:14px 0;">Aún no tienes movimientos registrados.</p>`;
 
   document.getElementById("main-view").innerHTML = `
     <div class="section-head" style="margin-top:6px;">
@@ -1041,16 +1319,16 @@ function vistaSaldoCampesino() {
 
     <div class="balance-card">
       <span style="font-size:15px; opacity:0.92;">Saldo disponible</span>
-      <div class="balance-number" data-count="${estado.campesino.saldo}">${formatoCOP(estado.campesino.saldo)}</div>
-      <p style="font-size:14px; opacity:0.92;">Cuenta: ${estado.campesino.cuenta}</p>
+      <div class="balance-number" data-count="${saldo}">${formatoCOP(saldo)}</div>
+      <p style="font-size:14px; opacity:0.92;">Cuenta: ${info.cuenta}</p>
       <button class="btn-primary" style="background:var(--blanco); color:var(--bosque);"
-        ${estado.campesino.saldo <= 0 ? "disabled" : ""} onclick="abrirModalRetiro()">
+        ${saldo <= 0 ? "disabled" : ""} onclick="abrirModalRetiro(${saldo})">
         Retirar a mi cuenta bancaria
       </button>
     </div>
 
     <div class="tip-card">
-      <strong style="color:var(--tierra);">Pago claro y sin descuentos:</strong> recibes el <strong>100% del valor de tus productos más el envío</strong>. El dinero aparece disponible apenas el pedido queda entregado.
+      <strong style="color:var(--tierra);">Pago claro y sin descuentos:</strong> recibes el <strong>100% del valor de tus productos más el envío</strong>. El saldo aparece aquí apenas el pedido queda entregado.
     </div>
 
     <div class="card">
@@ -1060,34 +1338,33 @@ function vistaSaldoCampesino() {
   `;
 }
 
-function abrirModalRetiro() {
+function abrirModalRetiro(saldoActual) {
+  const info = INFO_CAMPESINOS[estado.campesinoActivo] || INFO_CAMPESINOS["Hernando Rojas"];
   abrirModal(`
     <h2 class="section-title" style="margin-bottom:6px;">Confirmar retiro</h2>
     <p style="color:var(--texto-suave); margin-bottom:14px;">
-      Enviaremos <strong>${formatoCOP(estado.campesino.saldo)}</strong> a tu cuenta <strong>${estado.campesino.cuenta}</strong>.
+      Enviaremos <strong>${formatoCOP(saldoActual)}</strong> a tu cuenta <strong>${info.cuenta}</strong>.
     </p>
-    <button class="btn-primary" onclick="confirmarRetiro()">Sí, retirar ahora</button>
+    <button class="btn-primary" onclick="confirmarRetiro(${saldoActual})">Sí, retirar ahora</button>
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
 
-function confirmarRetiro() {
-  const monto = estado.campesino.saldo;
+function confirmarRetiro(monto) {
   if (monto <= 0) return;
-  estado.campesino.saldo = 0;
-  estado.campesino.historial.unshift({
-    titulo: "Retiro a cuenta bancaria",
-    fecha: "Ahora mismo · Transferencia",
-    monto: -monto,
-    tipo: "out"
+  estado.retiros.unshift({
+    campesino: estado.campesinoActivo,
+    monto,
+    fecha: new Date().toISOString()
   });
+  guardarEstado();
   cerrarModal();
   mostrarToast("¡Listo! Retiro enviado");
   vistaSaldoCampesino();
 }
 
 // ======================================================
-// PERFIL CAMPESINO: 4. APRENDER + MINIATURAS SVG
+// PERFIL CAMPESINO: 4. APRENDER
 // ======================================================
 
 function vistaAprender() {
