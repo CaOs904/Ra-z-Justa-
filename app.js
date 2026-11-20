@@ -1289,7 +1289,6 @@ function abrirFotoEnvio(id) {
     <button class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
   `);
 }
-}
 
 function confirmarPasoCampesino(id, nuevoEstado) {
   const p = estado.pedidos.find((item) => item.id === id);
